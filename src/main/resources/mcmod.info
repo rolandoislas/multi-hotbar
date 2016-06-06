@@ -1,14 +1,14 @@
 [
 {
-  "modid": "examplemod",
-  "name": "Example Mod",
-  "description": "Example placeholder mod.",
+  "modid": "multihotbar",
+  "name": "Multi-Hotbar",
+  "description": "Multi-Hotbar allows you to have a hotbar greater then 9 slots.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "",
+  "url": "https://github.com/rolandoislas/multi-hotbar",
   "updateUrl": "",
-  "authorList": ["ExampleDude"],
-  "credits": "The Forge and FML guys, for making this example",
+  "authorList": ["rolandoislas"],
+  "credits": "Forge, Mojang, and all the orphans.",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
