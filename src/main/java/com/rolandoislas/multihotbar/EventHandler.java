@@ -12,9 +12,11 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
  */
 public class EventHandler {
     private HotBarRenderer hotbarRender;
+    private HotbarLogic hotbarLogic;
 
     public EventHandler() {
         hotbarRender = new HotBarRenderer();
+        hotbarLogic = new HotbarLogic();
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
@@ -30,18 +32,7 @@ public class EventHandler {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onHotbarTick(TickEvent.PlayerTickEvent event) {
-        if (!event.type.equals(TickEvent.PlayerTickEvent.Type.CLIENT))
-            return;
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onItemPickedUp(PlayerEvent.ItemPickupEvent event) {
-
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void onMouseEvent(MouseEvent event) {
-
+    public void mouseEvent(MouseEvent event) {
+        hotbarLogic.mouseEvent(event);
     }
 }
