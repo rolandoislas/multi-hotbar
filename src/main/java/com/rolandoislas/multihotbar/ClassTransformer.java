@@ -24,7 +24,7 @@ public class ClassTransformer implements IClassTransformer {
         // NetHandlerPlayServer
         if (className.equals("net.minecraft.network.NetHandlerPlayServer"))
             return patchCreativeInventory(bytecode, true);
-        if (className.equals("nh")) // TODO class or method obfuscated name are wrong
+        if (className.equals("nh"))
             return patchCreativeInventory(bytecode, false);
         // ForgeHooks
         if (className.equals("net.minecraftforge.common.ForgeHooks"))
@@ -78,7 +78,7 @@ public class ClassTransformer implements IClassTransformer {
     public static int getCorrectedSlot(int slot) {
         /*
             36-44 are the original 9 hotbar slots
-            0-n are any beyond 9
+            9-n are any beyond 9
          */
         InventoryPlayer test = Minecraft.getMinecraft().thePlayer.inventory;
         return (slot >= 36 && slot <= 44) ? slot : slot - 45 + 9;
@@ -86,8 +86,9 @@ public class ClassTransformer implements IClassTransformer {
 
     private byte[] patchPickBlock(byte[] bytecode) {
         String methodName = "onPickBlock";
-        String methodDescription = "(Lnet/minecraft/util/MovingObjectPosition;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z";
-
+        String methodDescription = "(Lnet/minecraft/util/MovingObjectPosition;" +
+                "Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z";
+        String methodDescriptionObfuscated = "(Lazu;Lyz;Lahb;)Z";
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytecode);
         classReader.accept(classNode, 0);
@@ -96,7 +97,8 @@ public class ClassTransformer implements IClassTransformer {
             /*
                 update onPickBlock to use correct hotbar size
              */
-            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
+            if (method.name.equals(methodName) && (method.desc.equals(methodDescription) ||
+                    method.desc.equals(methodDescriptionObfuscated))) {
                 Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
@@ -114,7 +116,8 @@ public class ClassTransformer implements IClassTransformer {
 
     private byte[] patchCreativeInventory(byte[] bytecode, boolean deobfuscated) {
         String methodName = deobfuscated ? "processCreativeInventoryAction" : "a";
-        String methodDescription = "(Lnet/minecraft/network/play/client/C10PacketCreativeInventoryAction;)V";
+        String methodDescription = deobfuscated ?
+                "(Lnet/minecraft/network/play/client/C10PacketCreativeInventoryAction;)V" : "a(Ljm;)V";
 
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytecode);
