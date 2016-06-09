@@ -18,6 +18,7 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
     public void handleHotbarRender(RenderGameOverlayEvent event) {
         if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
             event.setCanceled(true);
@@ -26,6 +27,7 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
     }

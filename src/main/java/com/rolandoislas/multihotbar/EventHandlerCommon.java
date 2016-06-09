@@ -11,6 +11,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
  */
 public class EventHandlerCommon {
     @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
     public void playerJoined(EntityJoinWorldEvent event) {
         if (event.entity instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.entity;

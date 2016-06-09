@@ -8,6 +8,7 @@ import net.minecraftforge.common.MinecraftForge;
 /**
  * Created by Rolando on 6/6/2016.
  */
+@SuppressWarnings("unused")
 public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {

@@ -75,12 +75,12 @@ public class ClassTransformer implements IClassTransformer {
         return writer.toByteArray();
     }
 
+    @SuppressWarnings("unused")
     public static int getCorrectedSlot(int slot) {
         /*
             36-44 are the original 9 hotbar slots
             9-n are any beyond 9
          */
-        InventoryPlayer test = Minecraft.getMinecraft().thePlayer.inventory;
         return (slot >= 36 && slot <= 44) ? slot : slot - 45 + 9;
     }
 
