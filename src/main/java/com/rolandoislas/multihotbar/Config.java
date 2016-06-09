@@ -9,12 +9,17 @@ import java.io.File;
  */
 public class Config {
     public static int numberOfHotbars;
+    private static Configuration config;
 
     public static void load(File suggestedConfigurationFile) {
-        Configuration config = new Configuration(suggestedConfigurationFile);
+        config = new Configuration(suggestedConfigurationFile);
         config.load();
         numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, 2,
                 "Defines the amount fo hotbars that should be displayed");
         config.save();
+    }
+
+    public static void reload() {
+        load(config.getConfigFile());
     }
 }
