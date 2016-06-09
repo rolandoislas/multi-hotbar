@@ -43,6 +43,15 @@ public class HotBarRenderer extends Gui {
             drawDouble(scaledResolution, 2);
         }
         drawSelection();
+        drawItems();
+    }
+
+    private void drawItems() {
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            int x = hotbarPos[i][0];
+            int y = hotbarPos[i][1];
+            drawItems(x, y, i);
+        }
     }
 
     private void drawSelection() {
@@ -53,7 +62,11 @@ public class HotBarRenderer extends Gui {
         int x = hotbarPos[index][0];
         int y = hotbarPos[index][1];
         minecraft.getTextureManager().bindTexture(WIDGETS);
-        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glColor4f(1, 1, 1, 1);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        zLevel += 100;
         minecraft.ingameGUI.drawTexturedModalRect(-1 + x + 20 * slot, y - 1, 0, HOTBAR_HEIGHT, SELECTOR_SIZE,
                 SELECTOR_SIZE);
     }
@@ -66,7 +79,7 @@ public class HotBarRenderer extends Gui {
 
     private void drawDouble(ScaledResolution scaledResolution, int index) {
         int x = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH;
-        int y = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
+        int y = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index == 0 ? 1 : index);
         for (int i = index; i < index + 2; i++) {
             drawHotbar(x, y, i);
             x += HOTBAR_WIDTH;
@@ -80,7 +93,12 @@ public class HotBarRenderer extends Gui {
         minecraft.getTextureManager().bindTexture(WIDGETS);
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         minecraft.ingameGUI.drawTexturedModalRect(x, y, 0, 0, HOTBAR_WIDTH, HOTBAR_HEIGHT);
+    }
+
+    private void drawItems(int x, int y, int index) {
         // Draw items on hotbar
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         RenderHelper.enableGUIStandardItemLighting();

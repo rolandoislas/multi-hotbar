@@ -2,7 +2,6 @@ package com.rolandoislas.multihotbar;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.MouseEvent;
 
 /**
@@ -24,7 +23,6 @@ public class HotbarLogic {
                 else
                     player.inventory.currentItem = Config.numberOfHotbars * 9 - 1;
             }
-            ItemStack item = player.inventory.getCurrentItem();
             event.setCanceled(true);
         }
     }

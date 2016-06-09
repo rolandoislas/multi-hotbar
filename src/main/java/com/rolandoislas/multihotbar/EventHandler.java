@@ -2,10 +2,11 @@ package com.rolandoislas.multihotbar;
 
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 /**
  * Created by Rolando on 6/6/2016.
@@ -34,5 +35,18 @@ public class EventHandler {
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void playerJoined(EntityJoinWorldEvent event) {
+        if (event.entity instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.entity;
+            NBTTagCompound nbttagcompound = new NBTTagCompound();
+            player.writeToNBT(nbttagcompound);
+            player.inventory = new HotbarInventoryPlayer(player);
+            player.inventoryContainer = new HotbarContainerPlayer(player.inventory, !player.worldObj.isRemote, player);
+            player.openContainer = player.inventoryContainer;
+            player.readEntityFromNBT(nbttagcompound);
+        }
     }
 }

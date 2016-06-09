@@ -1,14 +1,11 @@
 package com.rolandoislas.multihotbar;
 
-import com.sun.org.apache.bcel.internal.generic.BIPUSH;
-import com.sun.org.apache.bcel.internal.generic.FDIV;
 import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.ClassWriter;
 import jdk.internal.org.objectweb.asm.Opcodes;
-import jdk.internal.org.objectweb.asm.tree.AbstractInsnNode;
-import jdk.internal.org.objectweb.asm.tree.ClassNode;
-import jdk.internal.org.objectweb.asm.tree.IntInsnNode;
-import jdk.internal.org.objectweb.asm.tree.MethodNode;
+import jdk.internal.org.objectweb.asm.tree.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.launchwrapper.IClassTransformer;
 
 import java.util.Iterator;
@@ -19,37 +16,144 @@ import java.util.Iterator;
 public class ClassTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String className, String newName, byte[] bytecode) {
+        // InventoryPlayer
         if (className.equals("net.minecraft.entity.player.InventoryPlayer"))
-            return patchPlayerInventory(className, bytecode, true);
+            return patchPlayerInventory(bytecode, true);
         if (className.equals("yx"))
-            return patchPlayerInventory(className, bytecode, false);
+            return patchPlayerInventory(bytecode, false);
+        // NetHandlerPlayServer
+        if (className.equals("net.minecraft.network.NetHandlerPlayServer"))
+            return patchCreativeInventory(bytecode, true);
+        if (className.equals("nh")) // TODO class or method obfuscated name are wrong
+            return patchCreativeInventory(bytecode, false);
+        // ForgeHooks
+        if (className.equals("net.minecraftforge.common.ForgeHooks"))
+            return patchPickBlock(bytecode);
+        // Minecraft
+        if (className.equals("net.minecraft.client.Minecraft"))
+            return patchMiddleClick(bytecode, true);
+        if (className.equals("bao"))
+            return patchMiddleClick(bytecode, false);
         return bytecode;
     }
 
-    private byte[] patchPlayerInventory(String className, byte[] bytecode, boolean deobfuscated) {
-        String methodNameGCI = deobfuscated ? "getCurrentItem" : "h";
-        String methodDescriptionGCI = "()Lnet/minecraft/item/ItemStack;";
-        String methodNameGHS = deobfuscated ? "getHotbarSize" : "i";
-        String methodDescriptionGHS = "()I";
+    private byte[] patchMiddleClick(byte[] bytecode, boolean deobfuscated) {
+        String methodName = deobfuscated ? "middleClickMouse" : "ao";
+        String methodnameSrg = "func_147112_ai";
+        String methodDescription = "()V";
 
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytecode);
         classReader.accept(classNode, 0);
 
         for (MethodNode method : classNode.methods) {
-            // Extend getCurrentItem slots
-            if (method.name.equals(methodNameGCI) && method.desc.equals(methodDescriptionGCI)) {
+            // Update middle mouse click so the correct slot is selected
+            if ((method.name.equals(methodName) || (deobfuscated && method.name.equals(methodnameSrg))) &&
+                    method.desc.equals(methodDescription)) {
+                Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
+                VarInsnNode varInsertNode = null;
+                while (instructions.hasNext()) {
+                    AbstractInsnNode currentNode = instructions.next();
+                    // Get node that stores the slot variable
+                    if (currentNode.getOpcode() == Opcodes.ISTORE) {
+                        VarInsnNode varNode = (VarInsnNode) currentNode;
+                        if (varNode.var == 2)
+                             varInsertNode = varNode;
+                    }
+                }
+                InsnList callMethod = new InsnList();
+                callMethod.add(new VarInsnNode(Opcodes.ILOAD, 2));
+                callMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/ClassTransformer",
+                        "getCorrectedSlot", "(I)I", false));
+                callMethod.add(new VarInsnNode(Opcodes.ISTORE, 2));
+                method.instructions.insert(varInsertNode, callMethod);
+            }
+        }
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        classNode.accept(writer);
+        return writer.toByteArray();
+    }
+
+    public static int getCorrectedSlot(int slot) {
+        /*
+            36-44 are the original 9 hotbar slots
+            0-n are any beyond 9
+         */
+        InventoryPlayer test = Minecraft.getMinecraft().thePlayer.inventory;
+        return (slot >= 36 && slot <= 44) ? slot : slot - 45 + 9;
+    }
+
+    private byte[] patchPickBlock(byte[] bytecode) {
+        String methodName = "onPickBlock";
+        String methodDescription = "(Lnet/minecraft/util/MovingObjectPosition;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z";
+
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytecode);
+        classReader.accept(classNode, 0);
+
+        for (MethodNode method : classNode.methods) {
+            /*
+                update onPickBlock to use correct hotbar size
+             */
+            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
                 Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
                     if (currentNode.getOpcode() == Opcodes.BIPUSH) {
                         ((IntInsnNode) currentNode).operand = Config.numberOfHotbars * 9;
+                    }
+                }
+            }
+        }
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        classNode.accept(writer);
+        return writer.toByteArray();
+    }
+
+    private byte[] patchCreativeInventory(byte[] bytecode, boolean deobfuscated) {
+        String methodName = deobfuscated ? "processCreativeInventoryAction" : "a";
+        String methodDescription = "(Lnet/minecraft/network/play/client/C10PacketCreativeInventoryAction;)V";
+
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytecode);
+        classReader.accept(classNode, 0);
+
+        for (MethodNode method : classNode.methods) {
+            /*
+                Update processCreativeInventoryAction()'s slot number check so that the new hotbar size does
+                not inflate the upper bounds. The check seems to be "slot < 36 + hotbar size". This results in 45
+                in vanilla because the 36 and hotbar size (9) are static.
+             */
+            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
+                Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
+                while (instructions.hasNext()) {
+                    AbstractInsnNode currentNode = instructions.next();
+                    if (currentNode.getOpcode() == Opcodes.BIPUSH) {
+                        ((IntInsnNode) currentNode).operand = 45 - Config.numberOfHotbars * 9;
                         break;
                     }
                 }
             }
+        }
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        classNode.accept(writer);
+        return writer.toByteArray();
+    }
+
+    private byte[] patchPlayerInventory(byte[] bytecode, boolean deobfuscated) {
+        String methodName = deobfuscated ? "getHotbarSize" : "i";
+        String methodDescription = "()I";
+
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytecode);
+        classReader.accept(classNode, 0);
+
+        for (MethodNode method : classNode.methods) {
             // Extend getHotbarSize slots
-            if (method.name.equals(methodNameGHS) && method.desc.equals(methodDescriptionGHS)) {
+            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
                 Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
