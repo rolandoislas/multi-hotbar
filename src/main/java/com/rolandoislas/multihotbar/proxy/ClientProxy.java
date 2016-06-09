@@ -1,6 +1,6 @@
 package com.rolandoislas.multihotbar.proxy;
 
-import com.rolandoislas.multihotbar.EventHandler;
+import com.rolandoislas.multihotbar.EventHandlerClient;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -13,7 +13,7 @@ public class ClientProxy extends CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
         // Register overlay event handler
-        MinecraftForge.EVENT_BUS.register(new EventHandler());
+        MinecraftForge.EVENT_BUS.register(new EventHandlerClient());
     }
 
     @Override
