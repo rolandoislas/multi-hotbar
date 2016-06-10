@@ -23,7 +23,7 @@ public class Config {
         // Handle client config
         config = new Configuration(suggestedConfigurationFile);
         config.load();
-        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, 2,
+        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, 4,
                 "Defines the amount of hotbars that should be displayed");
         config.save();
     }
