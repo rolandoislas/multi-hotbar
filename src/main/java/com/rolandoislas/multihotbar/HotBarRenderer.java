@@ -19,7 +19,6 @@ public class HotBarRenderer extends Gui {
     private static final int SELECTOR_SIZE = 24;
     private final ResourceLocation WIDGETS;
     private final Minecraft minecraft;
-    private int[][] hotbarPos = new int[4][2];
 
     public HotBarRenderer() {
         super();
@@ -30,28 +29,24 @@ public class HotBarRenderer extends Gui {
     public void render() {
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
-        ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
         if (Config.numberOfHotbars == 1)
-            drawSingle(scaledResolution, 0);
+            drawSingle(0);
         else if (Config.numberOfHotbars == 2)
-            drawDouble(scaledResolution, 0);
+            drawDouble(0);
         else if (Config.numberOfHotbars == 3) {
-            drawDouble(scaledResolution, 0);
-            drawSingle(scaledResolution, 2);
+            drawDouble(0);
+            drawSingle(2);
         } else if (Config.numberOfHotbars == 4) {
-            drawDouble(scaledResolution, 0);
-            drawDouble(scaledResolution, 2);
+            drawDouble(0);
+            drawDouble(2);
         }
         drawSelection();
         drawItems();
     }
 
     private void drawItems() {
-        for (int i = 0; i < Config.numberOfHotbars; i++) {
-            int x = hotbarPos[i][0];
-            int y = hotbarPos[i][1];
-            drawItems(x, y, i);
-        }
+        for (int i = 0; i < Config.numberOfHotbars; i++)
+            drawItems(i);
     }
 
     private void drawSelection() {
@@ -59,8 +54,9 @@ public class HotBarRenderer extends Gui {
         int slot = minecraft.thePlayer.inventory.currentItem;
         int index = (int) Math.floor(slot / 9);
         slot -= index * 9;
-        int x = hotbarPos[index][0];
-        int y = hotbarPos[index][1];
+        int[] coords = getHotbarCoords(index);
+        int x = coords[0];
+        int y = coords[1];
         minecraft.getTextureManager().bindTexture(WIDGETS);
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
@@ -71,24 +67,56 @@ public class HotBarRenderer extends Gui {
                 SELECTOR_SIZE);
     }
 
-    private void drawSingle(ScaledResolution scaledResolution, int index) {
-        int x = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
-        int y = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
-        drawHotbar(x, y, index);
+    private void drawSingle(int index) {
+        int[] coords = getHotbarCoords(index);
+        drawHotbar(coords[0], coords[1]);
     }
 
-    private void drawDouble(ScaledResolution scaledResolution, int index) {
-        int x = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH;
-        int y = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index == 0 ? 1 : index);
+    private void drawDouble(int index) {
         for (int i = index; i < index + 2; i++) {
-            drawHotbar(x, y, i);
-            x += HOTBAR_WIDTH;
+            int[] coords = getHotbarCoords(i);
+            drawHotbar(coords[0], coords[1]);
         }
     }
 
-    private void drawHotbar(int x, int y, int index) {
-        hotbarPos[index][0] = x;
-        hotbarPos[index][1] = y;
+    public static int[] getHotbarCoords(int index) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
+        int[] coords = new int[2];
+        if (Config.numberOfHotbars == 1) {
+            coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
+            coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
+        }
+        else if (Config.numberOfHotbars == 2 || Config.numberOfHotbars == 4) {
+            coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH * (index == 0 || index == 2 ? 1 : 0);
+            coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index == 0 || index == 1 ? 1 : 2);
+        }
+        else if (Config.numberOfHotbars == 3) {
+            coords[0] = (int) (scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH *
+                    (index == 2 ? .5 : (index == 1 ? 0 : 1)));
+            coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index == 2 ? 2 : 1);
+        }
+        return coords;
+    }
+
+    @SuppressWarnings("unused")
+    public static int getXForSlot(int slot) {
+        int index = (int) Math.floor(slot / 9);
+        slot -= index * 9;
+        int[] coords = getHotbarCoords(index);
+        int x = coords[0] + 3 + 16 * slot + 4 * slot;
+        return x;
+    }
+
+    @SuppressWarnings("unused")
+    public static int getYForSlot(int slot) {
+        int index = (int) Math.floor(slot / 9);
+        int[] coords = getHotbarCoords(index);
+        int y = coords[1] + 3;
+        return y;
+    }
+
+    private void drawHotbar(int x, int y) {
         // Draw hotbar
         minecraft.getTextureManager().bindTexture(WIDGETS);
         GL11.glColor4f(1, 1, 1, 1);
@@ -98,17 +126,17 @@ public class HotBarRenderer extends Gui {
         minecraft.ingameGUI.drawTexturedModalRect(x, y, 0, 0, HOTBAR_WIDTH, HOTBAR_HEIGHT);
     }
 
-    private void drawItems(int x, int y, int index) {
+    private void drawItems(int index) {
         // Draw items on hotbar
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         RenderHelper.enableGUIStandardItemLighting();
-        for (int i = 0; i < 9; i++) {
-            ItemStack item = minecraft.thePlayer.inventory.mainInventory[index * 9 + i];
+        for (int i = index * 9; i < index * 9 + 9; i++) {
+            ItemStack item = minecraft.thePlayer.inventory.mainInventory[i];
             if (item != null) {
-                int itemX = x + 3 + 16 * i + 4 * i;
-                int itemY = y + 3;
-                RenderItem.getInstance().renderItemIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item,
-                        itemX, itemY, true);
+                int itemX = getXForSlot(i);
+                int itemY = getYForSlot(i);
+                RenderItem.getInstance().renderItemAndEffectIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item,
+                        itemX, itemY);
                 RenderItem.getInstance().renderItemOverlayIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item, itemX, itemY);
             }
         }

@@ -34,7 +34,66 @@ public class ClassTransformer implements IClassTransformer {
             return patchMiddleClick(bytecode, true);
         if (className.equals("bao"))
             return patchMiddleClick(bytecode, false);
+        // TConstruct - AmmoSlotHolder
+        if (className.equals("tconstruct.weaponry.client.AmmoSlotHandler"))
+            return patchTConstuctSlotHighlight(bytecode);
         return bytecode;
+    }
+
+    private byte[] patchTConstuctSlotHighlight(byte[] bytecode) {
+        String methodName = "onRenderOverlay";
+        String methodDescription = "(Lnet/minecraftforge/client/event/RenderGameOverlayEvent$Pre;)V";
+
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytecode);
+        classReader.accept(classNode, 0);
+
+        for (MethodNode method : classNode.methods) {
+            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
+                Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
+                VarInsnNode xInsertNode = null;
+                VarInsnNode yInsertNode = null;
+                while (instructions.hasNext()) {
+                    AbstractInsnNode currentNode = instructions.next();
+                    // Update hotbar size
+                    if (currentNode.getOpcode() == Opcodes.BIPUSH) {
+                        IntInsnNode intNode = (IntInsnNode) currentNode;
+                        if (intNode.operand == 9)
+                            intNode.operand = Config.numberOfHotbars * 9;
+                    }
+                    // Get node that stores the x variable
+                    if (currentNode.getOpcode() == Opcodes.ISTORE) {
+                        VarInsnNode varNode = (VarInsnNode) currentNode;
+                        if (varNode.var == 6)
+                            xInsertNode = varNode;
+                    }
+                    // Get node that stores the z(y) variable
+                    if (currentNode.getOpcode() == Opcodes.ISTORE) {
+                        VarInsnNode varNode = (VarInsnNode) currentNode;
+                        if (varNode.var == 7)
+                            yInsertNode = varNode;
+                    }
+                }
+                // Call helper function to correct x
+                InsnList callXMethod = new InsnList();
+                callXMethod.add(new VarInsnNode(Opcodes.ILOAD, 5)); // slot
+                callXMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/HotBarRenderer",
+                        "getXForSlot", "(I)I", false));
+                callXMethod.add(new VarInsnNode(Opcodes.ISTORE, 6)); // x
+                method.instructions.insert(xInsertNode, callXMethod);
+                // y helper fuctiom
+                InsnList callYMethod = new InsnList();
+                callYMethod.add(new VarInsnNode(Opcodes.ILOAD, 5)); // slot
+                callYMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/HotBarRenderer",
+                        "getYForSlot", "(I)I", false));
+                callYMethod.add(new VarInsnNode(Opcodes.ISTORE, 7)); // y
+                method.instructions.insert(yInsertNode, callYMethod);
+            }
+        }
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        classNode.accept(writer);
+        return writer.toByteArray();
     }
 
     private byte[] patchMiddleClick(byte[] bytecode, boolean deobfuscated) {
