@@ -98,7 +98,7 @@ public class ClassTransformer implements IClassTransformer {
                     if (currentNode.getOpcode() == Opcodes.BIPUSH) {
                         IntInsnNode intNode = (IntInsnNode) currentNode;
                         if (intNode.operand == 9)
-                            intNode.operand = Config.numberOfHotbars * 9;
+                            intNode.operand = Config.MAX_HOTBARS * 9;
                     }
                     // Get node that stores the x variable
                     if (currentNode.getOpcode() == Opcodes.ISTORE) {
@@ -201,7 +201,7 @@ public class ClassTransformer implements IClassTransformer {
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
                     if (currentNode.getOpcode() == Opcodes.BIPUSH) {
-                        ((IntInsnNode) currentNode).operand = Config.numberOfHotbars * 9;
+                        ((IntInsnNode) currentNode).operand = Config.MAX_HOTBARS * 9;
                     }
                 }
             }
@@ -232,7 +232,7 @@ public class ClassTransformer implements IClassTransformer {
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
                     if (currentNode.getOpcode() == Opcodes.BIPUSH) {
-                        ((IntInsnNode) currentNode).operand = 45 - Config.numberOfHotbars * 9;
+                        ((IntInsnNode) currentNode).operand = 45 - Config.MAX_HOTBARS * 9;
                         break;
                     }
                 }
@@ -259,7 +259,7 @@ public class ClassTransformer implements IClassTransformer {
                 while (instructions.hasNext()) {
                     AbstractInsnNode currentNode = instructions.next();
                     if (currentNode.getOpcode() == Opcodes.BIPUSH) {
-                        ((IntInsnNode) currentNode).operand = Config.numberOfHotbars * 9;
+                        ((IntInsnNode) currentNode).operand = Config.MAX_HOTBARS * 9;
                         break;
                     }
                 }

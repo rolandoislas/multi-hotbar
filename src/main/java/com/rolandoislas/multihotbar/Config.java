@@ -10,6 +10,7 @@ import java.io.File;
  * Created by Rolando on 6/6/2016.
  */
 public class Config {
+    public static final int MAX_HOTBARS = 4;
     public static int numberOfHotbars;
     private static Configuration config;
 
@@ -17,13 +18,13 @@ public class Config {
         // Check if server and set hotbars to max
         boolean server = FMLCommonHandler.instance().getSide() == Side.SERVER;
         if (server) {
-            numberOfHotbars = 4;
+            numberOfHotbars = MAX_HOTBARS;
             return;
         }
         // Handle client config
         config = new Configuration(suggestedConfigurationFile);
         config.load();
-        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, 4,
+        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, MAX_HOTBARS,
                 "Defines the amount of hotbars that should be displayed");
         config.save();
     }
