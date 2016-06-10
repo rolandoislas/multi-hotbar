@@ -1,12 +1,10 @@
 package com.rolandoislas.multihotbar;
 
+import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.launchwrapper.IClassTransformer;
 
 import java.util.Iterator;
 
@@ -37,7 +35,48 @@ public class ClassTransformer implements IClassTransformer {
         // TConstruct - AmmoSlotHolder
         if (className.equals("tconstruct.weaponry.client.AmmoSlotHandler"))
             return patchTConstuctSlotHighlight(bytecode);
+        // Inventory Tweaks - InvTweaksContainerManager
+        if (className.equals("invtweaks.InvTweaksContainerManager"))
+            return patchInventoryTweaksAutoRefill(bytecode);
         return bytecode;
+    }
+
+    private byte[] patchInventoryTweaksAutoRefill(byte[] bytecode) {
+        String methodNameITS = "indexToSlot";
+        String methodDescriptionITS = "(Linvtweaks/api/container/ContainerSection;I)I";
+        String methodNameGS = "getSlot";
+        String methodDescriptionGS = "(Linvtweaks/api/container/ContainerSection;I)Lnet/minecraft/inventory/Slot;";
+
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytecode);
+        classReader.accept(classNode, 0);
+
+        for (MethodNode method : classNode.methods) {
+            // Extend getHotbarSize slots
+            if ((method.name.equals(methodNameITS) && method.desc.equals(methodDescriptionITS)) ||
+                    (method.name.equals(methodNameGS) && method.desc.equals(methodDescriptionGS))) {
+                AbstractInsnNode lineNumberNode = method.instructions.get(1);
+                InsnList callMethod = new InsnList();
+                callMethod.add(new VarInsnNode(Opcodes.ILOAD, 2));
+                callMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/ClassTransformer",
+                        "getCorrectInvTweaksIndex", "(I)I", false));
+                callMethod.add(new VarInsnNode(Opcodes.ISTORE, 2));
+                method.instructions.insert(lineNumberNode, callMethod);
+            }
+        }
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        classNode.accept(writer);
+        return writer.toByteArray();
+    }
+
+    @SuppressWarnings("unused")
+    public static int getCorrectInvTweaksIndex(int index) {
+        /*
+            27-35 first hotbar
+            0-26 other hotbars
+         */
+        return index > 36 ? index - 36 : index;
     }
 
     private byte[] patchTConstuctSlotHighlight(byte[] bytecode) {
