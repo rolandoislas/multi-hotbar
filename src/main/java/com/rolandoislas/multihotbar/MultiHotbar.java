@@ -12,7 +12,8 @@ import cpw.mods.fml.relauncher.Side;
 
 import java.util.Map;
 
-@Mod(modid = MultiHotbar.MODID, version = MultiHotbar.VERSION, name = MultiHotbar.NAME, acceptableRemoteVersions = "*")
+@Mod(modid = MultiHotbar.MODID, version = MultiHotbar.VERSION, name = MultiHotbar.NAME, acceptableRemoteVersions = "*",
+    guiFactory = "com.rolandoislas.multihotbar.GuiFactory", canBeDeactivated = true)
 public class MultiHotbar
 {
     public static final String MODID = "multihotbar";

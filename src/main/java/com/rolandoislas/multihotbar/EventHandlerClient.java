@@ -1,9 +1,11 @@
 package com.rolandoislas.multihotbar;
 
+import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.config.Configuration;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -64,5 +66,14 @@ public class EventHandlerClient {
                 type == RenderGameOverlayEvent.ElementType.FOOD ||
                 type == RenderGameOverlayEvent.ElementType.HEALTHMOUNT ||
                 type == RenderGameOverlayEvent.ElementType.JUMPBAR;
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.modID.equals(MultiHotbar.MODID)) {
+            Config.config.save();
+            Config.reload();
+        }
     }
 }

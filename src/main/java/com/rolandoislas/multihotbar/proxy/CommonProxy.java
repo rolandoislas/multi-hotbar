@@ -12,7 +12,8 @@ import net.minecraftforge.common.MinecraftForge;
  */
 public class CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
-        Config.load(event.getSuggestedConfigurationFile());
+        Config.setConfigFile(event.getSuggestedConfigurationFile());
+        Config.load();
         MinecraftForge.EVENT_BUS.register(new EventHandlerCommon());
     }
 

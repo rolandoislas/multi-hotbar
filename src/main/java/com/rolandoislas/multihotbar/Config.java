@@ -12,9 +12,9 @@ import java.io.File;
 public class Config {
     public static final int MAX_HOTBARS = 4;
     public static int numberOfHotbars;
-    private static Configuration config;
+    public static Configuration config;
 
-    public static void load(File suggestedConfigurationFile) {
+    public static void load() {
         // Check if server and set hotbars to max
         boolean server = FMLCommonHandler.instance().getSide() == Side.SERVER;
         if (server) {
@@ -22,7 +22,6 @@ public class Config {
             return;
         }
         // Handle client config
-        config = new Configuration(suggestedConfigurationFile);
         config.load();
         numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, MAX_HOTBARS,
                 "Defines the amount of hotbars that should be displayed");
@@ -30,9 +29,10 @@ public class Config {
     }
 
     public static void reload() {
-        if (config != null)
-            load(config.getConfigFile());
-        else
-            load(null);
+        load();
+    }
+
+    public static void setConfigFile(File configFile) {
+        config = new Configuration(configFile);
     }
 }
