@@ -133,9 +133,9 @@ public class HotBarRenderer extends Gui {
             if (item != null) {
                 int itemX = getXForSlot(i);
                 int itemY = getYForSlot(i);
-               // RenderItem.getInstance().renderItemAndEffectIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item,
-                        //itemX, itemY);
-                //RenderItem.getInstance().renderItemOverlayIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item, itemX, itemY);
+                minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
+                minecraft.getRenderItem().renderItemOverlayIntoGUI(minecraft.fontRendererObj, item, itemX, itemY,
+                        String.valueOf(item.stackSize));
             }
         }
         RenderHelper.disableStandardItemLighting();
