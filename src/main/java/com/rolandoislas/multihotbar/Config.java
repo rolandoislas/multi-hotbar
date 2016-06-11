@@ -13,6 +13,7 @@ public class Config {
     public static final int MAX_HOTBARS = 4;
     public static int numberOfHotbars;
     public static Configuration config;
+    public static boolean relativeHotbarKeys;
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -25,6 +26,9 @@ public class Config {
         config.load();
         numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, MAX_HOTBARS,
                 "Defines the amount of hotbars that should be displayed");
+        relativeHotbarKeys = config.getBoolean("Relative Hotbar Keys", Configuration.CATEGORY_GENERAL, false,
+                "If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently " +
+                        "selected hotbar instead of the first");
         config.save();
     }
 

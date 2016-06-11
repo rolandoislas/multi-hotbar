@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar.proxy;
 
 import com.rolandoislas.multihotbar.EventHandlerClient;
+import com.rolandoislas.multihotbar.KeyBindings;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -18,6 +19,8 @@ public class ClientProxy extends CommonProxy {
         EventHandlerClient eventHandlerClient = new EventHandlerClient();
         MinecraftForge.EVENT_BUS.register(eventHandlerClient);
         FMLCommonHandler.instance().bus().register(eventHandlerClient);
+        // Register KeyBindings
+        KeyBindings.load();
     }
 
     @Override

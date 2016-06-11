@@ -99,7 +99,6 @@ public class HotBarRenderer extends Gui {
         return coords;
     }
 
-    @SuppressWarnings("unused")
     public static int getXForSlot(int slot) {
         int index = (int) Math.floor(slot / 9);
         slot -= index * 9;
@@ -108,7 +107,6 @@ public class HotBarRenderer extends Gui {
         return x;
     }
 
-    @SuppressWarnings("unused")
     public static int getYForSlot(int slot) {
         int index = (int) Math.floor(slot / 9);
         int[] coords = getHotbarCoords(index);
