@@ -81,7 +81,7 @@ public class HotBarRenderer extends Gui {
 
     public static int[] getHotbarCoords(int index) {
         Minecraft minecraft = Minecraft.getMinecraft();
-        ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
+        ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int[] coords = new int[2];
         if (Config.numberOfHotbars == 1) {
             coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
@@ -133,9 +133,9 @@ public class HotBarRenderer extends Gui {
             if (item != null) {
                 int itemX = getXForSlot(i);
                 int itemY = getYForSlot(i);
-                RenderItem.getInstance().renderItemAndEffectIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item,
-                        itemX, itemY);
-                RenderItem.getInstance().renderItemOverlayIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item, itemX, itemY);
+               // RenderItem.getInstance().renderItemAndEffectIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item,
+                        //itemX, itemY);
+                //RenderItem.getInstance().renderItemOverlayIntoGUI(minecraft.fontRenderer, minecraft.getTextureManager(), item, itemX, itemY);
             }
         }
         RenderHelper.disableStandardItemLighting();

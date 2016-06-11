@@ -1,14 +1,13 @@
 package com.rolandoislas.multihotbar;
 
 import com.rolandoislas.multihotbar.proxy.CommonProxy;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.network.NetworkCheckHandler;
-import cpw.mods.fml.relauncher.Side;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkCheckHandler;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.Map;
 
@@ -26,19 +25,19 @@ public class MultiHotbar
             serverSide = "com.rolandoislas.multihotbar.proxy.CommonProxy")
     public static CommonProxy proxy;
 
-    @EventHandler
+    @Mod.EventHandler
     @SuppressWarnings("unused")
     public void preInit(FMLPreInitializationEvent event) {
         proxy.preInit(event);
     }
 
-    @EventHandler
+    @Mod.EventHandler
     @SuppressWarnings("unused")
     public void init(FMLInitializationEvent event) {
 		proxy.init(event);
     }
 
-    @EventHandler
+    @Mod.EventHandler
     @SuppressWarnings("unused")
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);

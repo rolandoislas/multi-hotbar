@@ -11,19 +11,20 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
 
-apply plugin: 'forge'
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = System.getenv('DRONE_BRANCH') == "develop" ? "dev-" + System.getenv('DRONE_BUILD_NUMBER') : "1.7.10-1.0.0"
+version = System.getenv('DRONE_BRANCH') == "develop" ? "dev-" + System.getenv('DRONE_BUILD_NUMBER') : "1.8.9-1.1.0"
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
 minecraft {
-    version = "1.7.10-10.13.4.1558-1.7.10"
-    runDir = "eclipse"
+    version = "1.8.9-11.15.1.1722"
+    runDir = "run"
+    mappings = "stable_20"
 }
 
 jar {

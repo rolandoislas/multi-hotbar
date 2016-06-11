@@ -1,10 +1,9 @@
 package com.rolandoislas.multihotbar;
 
-import cpw.mods.fml.common.gameevent.InputEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -14,10 +13,10 @@ public class HotbarLogic {
         // Scrolled
         if (event.dwheel != 0) {
             // Handle hotbar selector scroll
-            EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
+            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
             // Scrolled right
             if (event.dwheel < 0) {
-                if (KeyBindings.scrollModifier.getIsKeyPressed())
+                if (KeyBindings.scrollModifier.isKeyDown())
                     moveSelectionToNextHotbar();
                 else if (player.inventory.currentItem < Config.numberOfHotbars * 9 - 1)
                     player.inventory.currentItem++;
@@ -26,7 +25,7 @@ public class HotbarLogic {
             }
             // Scrolled left
             else {
-                if (KeyBindings.scrollModifier.getIsKeyPressed())
+                if (KeyBindings.scrollModifier.isKeyDown())
                     moveSelectionToPreviousHotbar();
                 else if (player.inventory.currentItem > 0)
                     player.inventory.currentItem--;
