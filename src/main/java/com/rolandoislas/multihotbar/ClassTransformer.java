@@ -57,21 +57,26 @@ public class ClassTransformer implements IClassTransformer {
                     (method.name.equals(methodNameGS) && method.desc.equals(methodDescriptionGS))) {
                 AbstractInsnNode lineNumberNode = method.instructions.get(1);
                 InsnList callMethod = new InsnList();
+                callMethod.add(new VarInsnNode(Opcodes.ALOAD, 1));
+                callMethod.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "invtweaks/api/container/ContainerSection",
+                        "name", "()Ljava/lang/String;", false));
                 callMethod.add(new VarInsnNode(Opcodes.ILOAD, 2));
                 callMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/ClassTransformer",
-                        "getCorrectInvTweaksIndex", "(I)I", false));
+                        "getCorrectInvTweaksIndex", "(Ljava/lang/String;I)I", false));
                 callMethod.add(new VarInsnNode(Opcodes.ISTORE, 2));
                 method.instructions.insert(lineNumberNode, callMethod);
             }
         }
 
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
         return writer.toByteArray();
     }
 
     @SuppressWarnings("unused")
-    public static int getCorrectInvTweaksIndex(int index) {
+    public static int getCorrectInvTweaksIndex(String inventoryName, int index) {
+        if (!inventoryName.equalsIgnoreCase("inventory"))
+            return index;
         /*
             27-35 first hotbar
             0-26 other hotbars
