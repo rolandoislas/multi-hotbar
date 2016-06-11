@@ -17,12 +17,12 @@ public class ClassTransformer implements IClassTransformer {
         // InventoryPlayer
         if (className.equals("net.minecraft.entity.player.InventoryPlayer"))
             return patchPlayerInventory(bytecode, true);
-        if (className.equals("yx"))
+        if (className.equals("wm"))
             return patchPlayerInventory(bytecode, false);
         // NetHandlerPlayServer
         if (className.equals("net.minecraft.network.NetHandlerPlayServer"))
             return patchCreativeInventory(bytecode, true);
-        if (className.equals("nh"))
+        if (className.equals("lm"))
             return patchCreativeInventory(bytecode, false);
         // ForgeHooks
         if (className.equals("net.minecraftforge.common.ForgeHooks"))
@@ -30,7 +30,7 @@ public class ClassTransformer implements IClassTransformer {
         // Minecraft
         if (className.equals("net.minecraft.client.Minecraft"))
             return patchMiddleClick(bytecode, true);
-        if (className.equals("bao"))
+        if (className.equals("ave"))
             return patchMiddleClick(bytecode, false);
         // TConstruct - AmmoSlotHolder
         if (className.equals("tconstruct.weaponry.client.AmmoSlotHandler"))
@@ -136,8 +136,7 @@ public class ClassTransformer implements IClassTransformer {
     }
 
     private byte[] patchMiddleClick(byte[] bytecode, boolean deobfuscated) {
-        String methodName = deobfuscated ? "middleClickMouse" : "ao";
-        String methodnameSrg = "func_147112_ai";
+        String methodName = deobfuscated ? "middleClickMouse" : "az";
         String methodDescription = "()V";
 
         ClassNode classNode = new ClassNode();
@@ -146,8 +145,7 @@ public class ClassTransformer implements IClassTransformer {
 
         for (MethodNode method : classNode.methods) {
             // Update middle mouse click so the correct slot is selected
-            if ((method.name.equals(methodName) || (deobfuscated && method.name.equals(methodnameSrg))) &&
-                    method.desc.equals(methodDescription)) {
+            if (method.name.equals(methodName) && method.desc.equals(methodDescription)) {
                 Iterator<AbstractInsnNode> instructions = method.instructions.iterator();
                 VarInsnNode varInsertNode = null;
                 while (instructions.hasNext()) {
@@ -155,15 +153,15 @@ public class ClassTransformer implements IClassTransformer {
                     // Get node that stores the slot variable
                     if (currentNode.getOpcode() == Opcodes.ISTORE) {
                         VarInsnNode varNode = (VarInsnNode) currentNode;
-                        if (varNode.var == 2)
+                        if (varNode.var == 3)
                              varInsertNode = varNode;
                     }
                 }
                 InsnList callMethod = new InsnList();
-                callMethod.add(new VarInsnNode(Opcodes.ILOAD, 2));
+                callMethod.add(new VarInsnNode(Opcodes.ILOAD, 3));
                 callMethod.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "com/rolandoislas/"+MultiHotbar.MODID+"/ClassTransformer",
                         "getCorrectedSlot", "(I)I", false));
-                callMethod.add(new VarInsnNode(Opcodes.ISTORE, 2));
+                callMethod.add(new VarInsnNode(Opcodes.ISTORE, 3));
                 method.instructions.insert(varInsertNode, callMethod);
             }
         }
@@ -186,7 +184,7 @@ public class ClassTransformer implements IClassTransformer {
         String methodName = "onPickBlock";
         String methodDescription = "(Lnet/minecraft/util/MovingObjectPosition;" +
                 "Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/world/World;)Z";
-        String methodDescriptionObfuscated = "(Lazu;Lyz;Lahb;)Z";
+        String methodDescriptionObfuscated = "(Lauh;Lwn;Ladm;)Z";
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new ClassReader(bytecode);
         classReader.accept(classNode, 0);

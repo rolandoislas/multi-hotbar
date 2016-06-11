@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
@@ -135,7 +134,7 @@ public class HotBarRenderer extends Gui {
                 int itemY = getYForSlot(i);
                 minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
                 minecraft.getRenderItem().renderItemOverlayIntoGUI(minecraft.fontRendererObj, item, itemX, itemY,
-                        String.valueOf(item.stackSize));
+                        item.stackSize > 1 ? String.valueOf(item.stackSize) : "");
             }
         }
         RenderHelper.disableStandardItemLighting();
