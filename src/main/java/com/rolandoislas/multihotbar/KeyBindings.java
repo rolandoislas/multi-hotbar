@@ -1,7 +1,6 @@
 package com.rolandoislas.multihotbar;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.registry.LanguageRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Keyboard;

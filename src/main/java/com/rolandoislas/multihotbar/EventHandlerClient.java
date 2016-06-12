@@ -4,11 +4,11 @@ import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
+import cpw.mods.fml.common.gameevent.PlayerEvent;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.common.config.Configuration;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -84,5 +84,24 @@ public class EventHandlerClient {
     @SuppressWarnings("unused")
     public void keyPressed(InputEvent.KeyInputEvent event) {
         hotbarLogic.keyPressed(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void playerJoined(PlayerEvent.PlayerLoggedInEvent event) {
+        EntityPlayer player = event.player;
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        player.writeToNBT(nbttagcompound);
+        HotbarLogic.readFromNbt(nbttagcompound);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void playerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
+        EntityPlayer player = event.player;
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
+        player.writeToNBT(nbttagcompound);
+        HotbarLogic.writeToNbt(nbttagcompound);
+
     }
 }
