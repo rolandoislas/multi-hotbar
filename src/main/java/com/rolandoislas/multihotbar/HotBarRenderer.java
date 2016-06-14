@@ -50,6 +50,8 @@ public class HotBarRenderer extends Gui {
     }
 
     private void drawSelection() {
+        if (InventoryHelper.waitTicks > 0)
+            return;
         // Draw selection indicator
         int slot = minecraft.thePlayer.inventory.currentItem;
         int index = HotbarLogic.hotbarIndex;

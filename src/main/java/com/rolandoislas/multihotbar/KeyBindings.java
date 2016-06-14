@@ -10,10 +10,13 @@ import org.lwjgl.input.Keyboard;
  */
 public class KeyBindings {
     public static KeyBinding scrollModifier;
+    public static KeyBinding showDefaultHotbar;
 
     public static void load() {
         scrollModifier = new KeyBinding("key.scrollModifier", Keyboard.KEY_LMENU, "key.category.main");
+        showDefaultHotbar = new KeyBinding("key.showDefaultHotbar", Keyboard.KEY_GRAVE, "key.category.main");
         ClientRegistry.registerKeyBinding(scrollModifier);
+        ClientRegistry.registerKeyBinding(showDefaultHotbar);
     }
 
     public static int isHotbarKeyDown() {

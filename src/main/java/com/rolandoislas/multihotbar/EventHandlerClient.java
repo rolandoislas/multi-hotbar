@@ -5,10 +5,11 @@ import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -24,12 +25,14 @@ public class EventHandlerClient {
         hotbarLogic = new HotbarLogic();
     }
 
-    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SuppressWarnings("unused")
     public void handleHotbarRender(RenderGameOverlayEvent event) {
         if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
-            event.setCanceled(true);
-            hotbarRender.render();
+            if (!HotbarLogic.showDefault) {
+                event.setCanceled(true);
+                hotbarRender.render();
+            }
         }
     }
 
@@ -42,7 +45,13 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SuppressWarnings("unused")
     public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
-        if (Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        // If events preceding the hotbar are cancelled pop the maxtrix before the hotbar in rendered
+        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
+            GL11.glPopMatrix();
+            renderPosted = true;
+        }
+        // Apply the translation
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -54,7 +63,7 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     @SuppressWarnings("unused")
     public void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if (Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
             renderPosted = true;
             GL11.glPopMatrix();
         }
@@ -88,20 +97,32 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
-    public void playerJoined(PlayerEvent.PlayerLoggedInEvent event) {
-        EntityPlayer player = event.player;
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        player.writeToNBT(nbttagcompound);
-        HotbarLogic.readFromNbt(nbttagcompound);
+    public void worldLoad(WorldEvent.Load event) {
+        hotbarLogic.load(event.world);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
-    public void playerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
-        EntityPlayer player = event.player;
-        NBTTagCompound nbttagcompound = new NBTTagCompound();
-        player.writeToNBT(nbttagcompound);
-        HotbarLogic.writeToNbt(nbttagcompound);
+    public void connectToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        hotbarLogic.setWorldAddress(event.manager.getSocketAddress().toString());
+    }
 
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void worldUnload(WorldEvent.Unload event) {
+        hotbarLogic.save();
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void playerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!event.player.worldObj.getGameRules().getGameRuleBooleanValue("keepInventory"))
+            HotbarLogic.reset();
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
+    public void playerTick(TickEvent.PlayerTickEvent event) {
+        InventoryHelper.tick();
     }
 }
