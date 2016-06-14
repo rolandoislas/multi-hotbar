@@ -101,8 +101,11 @@ public class HotbarLogic {
         int awayFromZero = HotbarLogic.hotbarIndex;
         if (awayFromZero == 0)
             return;
+        int slot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
         for (int i = 0; i < Config.numberOfHotbars - awayFromZero; i++)
             moveSelectionToNextHotbar();
+        InventoryHelper.setLastItem(slot);
+
     }
 
     public static void reset() {

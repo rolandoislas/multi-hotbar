@@ -65,4 +65,8 @@ public class InventoryHelper {
             lastItem = -1;
         }
     }
+
+    public static void setLastItem(int lastItem) {
+        InventoryHelper.lastItem = lastItem;
+    }
 }
