@@ -115,6 +115,12 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
+    public void changeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        hotbarLogic.playerChangedDimension();
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SuppressWarnings("unused")
     public void playerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (!event.player.worldObj.getGameRules().getGameRuleBooleanValue("keepInventory"))
             HotbarLogic.reset();

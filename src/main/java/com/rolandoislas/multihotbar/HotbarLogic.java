@@ -25,6 +25,7 @@ public class HotbarLogic {
     private static WorldJson[] worldJsonArray;
     private World world;
     private String worldAddress;
+    private World dimWorld;
 
     public void mouseEvent(MouseEvent event) {
         // Scrolled
@@ -144,6 +145,7 @@ public class HotbarLogic {
             writer.write(json);
             writer.close();
         } catch (IOException ignore) {}
+        this.dimWorld = this.world; // Backup incase it was just a dimension change
         this.world = null;
     }
 
@@ -192,5 +194,9 @@ public class HotbarLogic {
 
     public void setWorldAddress(String worldAddress) {
         this.worldAddress = worldAddress;
+    }
+
+    public void playerChangedDimension() {
+        load(this.dimWorld);
     }
 }
