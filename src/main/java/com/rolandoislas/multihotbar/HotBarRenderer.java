@@ -45,14 +45,15 @@ public class HotBarRenderer extends Gui {
 
     private void drawItems() {
         for (int i = 0; i < Config.numberOfHotbars; i++)
-            drawItems(i);
+            drawItems(i, HotbarLogic.hotbarOrder[i]);
     }
 
     private void drawSelection() {
+        if (InventoryHelper.waitTicks > 0)
+            return;
         // Draw selection indicator
         int slot = minecraft.thePlayer.inventory.currentItem;
-        int index = (int) Math.floor(slot / 9);
-        slot -= index * 9;
+        int index = HotbarLogic.hotbarIndex;
         int[] coords = getHotbarCoords(index);
         int x = coords[0];
         int y = coords[1];
@@ -78,7 +79,7 @@ public class HotBarRenderer extends Gui {
         }
     }
 
-    public static int[] getHotbarCoords(int index) {
+    private int[] getHotbarCoords(int index) {
         Minecraft minecraft = Minecraft.getMinecraft();
         ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int[] coords = new int[2];
@@ -98,16 +99,13 @@ public class HotBarRenderer extends Gui {
         return coords;
     }
 
-    public static int getXForSlot(int slot) {
-        int index = (int) Math.floor(slot / 9);
-        slot -= index * 9;
+    private int getXForSlot(int index, int slot) {
         int[] coords = getHotbarCoords(index);
         int x = coords[0] + 3 + 16 * slot + 4 * slot;
         return x;
     }
 
-    public static int getYForSlot(int slot) {
-        int index = (int) Math.floor(slot / 9);
+    private int getYForSlot(int index) {
         int[] coords = getHotbarCoords(index);
         int y = coords[1] + 3;
         return y;
@@ -123,15 +121,15 @@ public class HotBarRenderer extends Gui {
         minecraft.ingameGUI.drawTexturedModalRect(x, y, 0, 0, HOTBAR_WIDTH, HOTBAR_HEIGHT);
     }
 
-    private void drawItems(int index) {
+    private void drawItems(int hotbarIndex, int slotIndex) {
         // Draw items on hotbar
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         RenderHelper.enableGUIStandardItemLighting();
-        for (int i = index * 9; i < index * 9 + 9; i++) {
-            ItemStack item = minecraft.thePlayer.inventory.mainInventory[i];
+        for (int i = slotIndex * 9; i < slotIndex * 9 + 9; i++) {
+            ItemStack item = minecraft.thePlayer.inventory.getStackInSlot(i);
             if (item != null) {
-                int itemX = getXForSlot(i);
-                int itemY = getYForSlot(i);
+                int itemX = getXForSlot(hotbarIndex, i - slotIndex * 9);
+                int itemY = getYForSlot(hotbarIndex);
                 minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
                 minecraft.getRenderItem().renderItemOverlayIntoGUI(minecraft.fontRendererObj, item, itemX, itemY,
                         item.stackSize > 1 ? String.valueOf(item.stackSize) : "");
