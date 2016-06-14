@@ -15,6 +15,7 @@ public class InventoryHelper {
 
     public static void swapHotbars(int firstIndex, int secondIndex) {
         EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
+        waitTicks = 1000000; // One MILLION ticks!
         lastItem = player.inventory.currentItem;
         boolean slotFound = false;
         int firstSlotIndex = indexToSlot(firstIndex);
@@ -42,6 +43,8 @@ public class InventoryHelper {
                     player.inventory.currentItem = -1;
                 waitTicks = 5; // Wait a few ticks so Inventory Tweaks' tick event doesn't catch the move
             }
+            else
+                waitTicks = 0;
         }
     }
 
