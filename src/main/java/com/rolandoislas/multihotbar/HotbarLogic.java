@@ -28,6 +28,8 @@ public class HotbarLogic {
     private World dimWorld;
 
     public void mouseEvent(MouseEvent event) {
+        if (InventoryHelper.waitTicks > 0)
+            return;
         // Scrolled
         if (event.dwheel != 0) {
             // Handle hotbar selector scroll
@@ -79,6 +81,8 @@ public class HotbarLogic {
     }
 
     public void keyPressed(InputEvent.KeyInputEvent event) {
+        if (InventoryHelper.waitTicks > 0)
+            return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
@@ -101,8 +105,11 @@ public class HotbarLogic {
         int awayFromZero = HotbarLogic.hotbarIndex;
         if (awayFromZero == 0)
             return;
+        int slot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
         for (int i = 0; i < Config.numberOfHotbars - awayFromZero; i++)
             moveSelectionToNextHotbar();
+        InventoryHelper.setLastItem(slot);
+
     }
 
     public static void reset() {
