@@ -104,14 +104,12 @@ public class HotbarLogic {
     }
 
     private void moveSelectionToFirstHotbar() {
-        int awayFromZero = HotbarLogic.hotbarIndex;
-        if (awayFromZero == 0)
+        if (hotbarIndex == 0)
             return;
-        int slot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-        for (int i = 0; i < Config.numberOfHotbars - awayFromZero; i++)
-            moveSelectionToNextHotbar();
-        InventoryHelper.setLastItem(slot);
-
+        InventoryHelper.swapHotbars(hotbarOrder[0], hotbarOrder[hotbarIndex]);
+        hotbarOrder[hotbarIndex] = hotbarOrder[0];
+        hotbarOrder[0] = 0;
+        hotbarIndex = 0;
     }
 
     public static void reset() {
