@@ -28,7 +28,7 @@ public class HotbarLogic {
     private World dimWorld;
 
     public void mouseEvent(MouseEvent event) {
-        if (InventoryHelper.waitTicks > 0)
+        if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
             return;
         // Scrolled
         if (event.dwheel != 0) {
@@ -83,6 +83,11 @@ public class HotbarLogic {
     public void keyPressed(InputEvent.KeyInputEvent event) {
         if (InventoryHelper.waitTicks > 0)
             return;
+        // Check toggle key
+        if (KeyBindings.showDefaultHotbar.isPressed())
+            showDefault = !showDefault;
+        if (HotbarLogic.showDefault)
+            return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
@@ -96,9 +101,6 @@ public class HotbarLogic {
             if (!Config.relativeHotbarKeys)
                 moveSelectionToFirstHotbar();
         }
-        // Check toggle key
-        if (KeyBindings.showDefaultHotbar.isPressed())
-            showDefault = !showDefault;
     }
 
     private void moveSelectionToFirstHotbar() {
