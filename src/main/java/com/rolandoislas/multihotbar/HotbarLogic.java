@@ -57,6 +57,7 @@ public class HotbarLogic {
                 }
             }
             event.setCanceled(true);
+            resetTooltipTicks();
         }
     }
 
@@ -84,8 +85,10 @@ public class HotbarLogic {
         if (InventoryHelper.waitTicks > 0)
             return;
         // Check toggle key
-        if (KeyBindings.showDefaultHotbar.isPressed())
+        if (KeyBindings.showDefaultHotbar.isPressed()) {
             showDefault = !showDefault;
+            Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
+        }
         if (HotbarLogic.showDefault)
             return;
         // Check hotbar keys
@@ -101,6 +104,12 @@ public class HotbarLogic {
             if (!Config.relativeHotbarKeys)
                 moveSelectionToFirstHotbar();
         }
+        if (slot > -1)
+            resetTooltipTicks();
+    }
+
+    private void resetTooltipTicks() {
+        HotBarRenderer.tooltipTicks = 128;
     }
 
     private void moveSelectionToFirstHotbar() {
@@ -114,6 +123,7 @@ public class HotbarLogic {
 
     public static void reset() {
         showDefault = false;
+        updateTooltips();
         hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
             hotbarOrder[i] = i;
@@ -154,6 +164,7 @@ public class HotbarLogic {
         } catch (IOException ignore) {}
         this.dimWorld = this.world; // Backup incase it was just a dimension change
         this.world = null;
+        updateTooltips();
     }
 
     public void load(World world) {
@@ -170,6 +181,7 @@ public class HotbarLogic {
                     if (worldJson.getId().equals(getWorldId(world))) {
                         hotbarIndex = worldJson.getIndex();
                         hotbarOrder = worldJson.getOrder();
+                        updateTooltips();
                         break;
                     } else
                         reset();
@@ -180,6 +192,10 @@ public class HotbarLogic {
         } catch (FileNotFoundException ignore) {
             reset();
         }
+    }
+
+    private static void updateTooltips() {
+        Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
     }
 
     private String getWorldId() {

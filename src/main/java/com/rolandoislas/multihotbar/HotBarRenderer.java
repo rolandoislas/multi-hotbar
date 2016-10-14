@@ -3,6 +3,7 @@ package com.rolandoislas.multihotbar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
@@ -17,6 +18,7 @@ public class HotBarRenderer extends Gui {
     private static final int HOTBAR_WIDTH = 182;
     private static final int HOTBAR_HEIGHT = 22;
     private static final int SELECTOR_SIZE = 24;
+    public static int tooltipTicks = 128;
     private final ResourceLocation WIDGETS;
     private final Minecraft minecraft;
 
@@ -42,6 +44,31 @@ public class HotBarRenderer extends Gui {
         }
         drawSelection();
         drawItems();
+        drawTooltip();
+    }
+
+    private void drawTooltip() {
+        if (tooltipTicks > 0)
+            tooltipTicks--;
+        int[] coords = getHotbarCoords(Config.numberOfHotbars >= 3 ? 2 : 0);
+        ItemStack item = minecraft.thePlayer.inventory.getCurrentItem();
+        if (item == null || tooltipTicks == 0)
+            return;
+        ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth,
+                minecraft.displayHeight);
+        int x = scaledResolution.getScaledWidth() / 2 -
+                minecraft.fontRenderer.getStringWidth(item.getDisplayName()) / 2;
+        int y = coords[1] - 37 + (minecraft.playerController.shouldDrawHUD() ? 0 : 14);
+        int color = (int) (tooltipTicks * 256f / 10f);
+        color = color > 255 ? 255 : color;
+        if (color > 0) {
+            GL11.glPushMatrix();
+            GL11.glEnable(GL11.GL_BLEND);
+            OpenGlHelper.glBlendFunc(770, 771, 1, 0);
+            minecraft.fontRenderer.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
+            GL11.glDisable(GL11.GL_BLEND);
+            GL11.glPopMatrix();
+        }
     }
 
     private void drawItems() {
