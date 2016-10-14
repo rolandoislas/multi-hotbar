@@ -66,6 +66,8 @@ public class HotbarLogic {
     }
 
     private void moveSelection(boolean forward) {
+        if (Config.numberOfHotbars == 1)
+            return;
         int previousIndex = hotbarIndex;
         hotbarIndex += forward ? 1 : -1; // Change hotbar
         hotbarIndex = hotbarIndex < 0 ? Config.numberOfHotbars - 1 : hotbarIndex; // Loop from first to last
@@ -95,7 +97,7 @@ public class HotbarLogic {
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
         // Change hotbars
-        if (slot > -1 && currentItem == slot) {
+        if (slot > -1 && currentItem == slot && Config.numberOfHotbars > 1) {
             moveSelectionToNextHotbar();
         }
         // Select a slot
