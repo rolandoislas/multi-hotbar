@@ -42,6 +42,11 @@ public class EventHandlerClient {
         hotbarLogic.mouseEvent(event);
     }
 
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void inputEvent(InputEvent event) {
+        hotbarLogic.inputEvent(event);
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SuppressWarnings("unused")
     public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {

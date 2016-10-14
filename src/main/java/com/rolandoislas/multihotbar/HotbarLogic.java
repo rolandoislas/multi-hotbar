@@ -3,9 +3,15 @@ package com.rolandoislas.multihotbar;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import cpw.mods.fml.common.gameevent.InputEvent;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
 
@@ -14,6 +20,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -104,7 +111,7 @@ public class HotbarLogic {
         else if (slot > - 1) {
             Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot;
             if (!Config.relativeHotbarKeys)
-                moveSelectionToFirstHotbar();
+                moveSelectionToHotbar(0);
         }
         if (slot > -1)
             resetTooltipTicks();
@@ -114,13 +121,13 @@ public class HotbarLogic {
         HotBarRenderer.tooltipTicks = 128;
     }
 
-    private void moveSelectionToFirstHotbar() {
-        if (hotbarIndex == 0)
+    private void moveSelectionToHotbar(int index) {
+        if (hotbarIndex == index)
             return;
-        InventoryHelper.swapHotbars(hotbarOrder[0], hotbarOrder[hotbarIndex]);
-        hotbarOrder[hotbarIndex] = hotbarOrder[0];
-        hotbarOrder[0] = 0;
-        hotbarIndex = 0;
+        InventoryHelper.swapHotbars(hotbarOrder[index], hotbarOrder[hotbarIndex]);
+        hotbarOrder[hotbarIndex] = hotbarOrder[index];
+        hotbarOrder[index] = 0;
+        hotbarIndex = index;
     }
 
     public static void reset() {
@@ -223,5 +230,100 @@ public class HotbarLogic {
 
     public void playerChangedDimension() {
         load(this.dimWorld);
+    }
+
+    public void inputEvent(InputEvent event) {
+        // Pick block
+        while (KeyBindings.isPickBlockPressed())
+            pickBlock();
+    }
+
+    private void pickBlock() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        double distance = minecraft.playerController.getBlockReachDistance();
+        MovingObjectPosition target = minecraft.renderViewEntity.rayTrace(distance, 1);
+        Vec3 position = minecraft.renderViewEntity.getPosition(1);
+        Vec3 look = minecraft.renderViewEntity.getLook(1);
+        Vec3 pick = position.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
+        List entities = minecraft.theWorld.getEntitiesWithinAABBExcludingEntity(minecraft.renderViewEntity,
+                minecraft.renderViewEntity.boundingBox.addCoord(look.xCoord * distance,
+                        look.yCoord * distance, look.zCoord * distance).expand(1, 1, 1));
+        for (Object e : entities) {
+            Entity entity = (Entity) e;
+            if (entity.canBeCollidedWith()) {
+                float borderSize = entity.getCollisionBorderSize();
+                AxisAlignedBB axisalignedbb = entity.boundingBox.expand(borderSize, borderSize, borderSize);
+                MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(position, pick);
+                if (movingobjectposition != null)
+                    target = new MovingObjectPosition(entity, movingobjectposition.hitVec);
+            }
+        }
+
+        ItemStack result;
+        boolean isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
+
+        if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            int x = target.blockX;
+            int y = target.blockY;
+            int z = target.blockZ;
+            Block block = minecraft.theWorld.getBlock(x, y, z);
+
+            if (block.isAir(minecraft.theWorld, x, y, z))
+                return;
+
+            result = block.getPickBlock(target, minecraft.theWorld, x, y, z, minecraft.thePlayer);
+        }
+        else {
+            if (target.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY || target.entityHit == null ||
+                    !isCreative)
+                return;
+            result = target.entityHit.getPickedResult(target);
+        }
+
+        if (result == null)
+            return;
+
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(hotbarOrder[i] * 9 + j);
+                if (stack != null && stack.isItemEqual(result) && ItemStack.areItemStackTagsEqual(stack, result)) {
+                    minecraft.thePlayer.inventory.currentItem = j;
+                    moveSelectionToHotbar(i);
+                    return;
+                }
+            }
+        }
+
+        if (!isCreative)
+            return;
+
+        int slot = getFirstEmptyStack();
+        if (slot < 0)
+            slot = minecraft.thePlayer.inventory.currentItem;
+        int hotbarIndexRaw = (int) Math.floor(slot / 9);
+        int hotbarIndex = 0;
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            if (hotbarOrder[i] == hotbarIndexRaw) {
+                hotbarIndex = i;
+                break;
+            }
+        }
+        minecraft.thePlayer.inventory.currentItem = slot - hotbarIndexRaw * 9;
+        minecraft.thePlayer.inventory.setInventorySlotContents(slot, result);
+        minecraft.playerController.sendSlotPacket(result, slot >= 9 ? slot :
+                minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
+        moveSelectionToHotbar(hotbarIndex);
+    }
+
+    private int getFirstEmptyStack() {
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                int index = hotbarOrder[i] * 9 + j;
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                if (stack == null)
+                    return index;
+            }
+        }
+        return -1;
     }
 }

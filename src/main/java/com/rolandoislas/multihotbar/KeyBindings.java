@@ -26,4 +26,8 @@ public class KeyBindings {
                 return i;
         return -1;
     }
+
+    public static boolean isPickBlockPressed() {
+        return Minecraft.getMinecraft().gameSettings.keyBindPickBlock.isPressed();
+    }
 }
