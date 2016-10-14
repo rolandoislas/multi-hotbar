@@ -28,7 +28,7 @@ public class HotbarLogic {
     private World dimWorld;
 
     public void mouseEvent(MouseEvent event) {
-        if (InventoryHelper.waitTicks > 0)
+        if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
             return;
         // Scrolled
         if (event.dwheel != 0) {
@@ -57,6 +57,7 @@ public class HotbarLogic {
                 }
             }
             event.setCanceled(true);
+            resetTooltipTicks();
         }
     }
 
@@ -65,6 +66,8 @@ public class HotbarLogic {
     }
 
     private void moveSelection(boolean forward) {
+        if (Config.numberOfHotbars == 1)
+            return;
         int previousIndex = hotbarIndex;
         hotbarIndex += forward ? 1 : -1; // Change hotbar
         hotbarIndex = hotbarIndex < 0 ? Config.numberOfHotbars - 1 : hotbarIndex; // Loop from first to last
@@ -83,11 +86,18 @@ public class HotbarLogic {
     public void keyPressed(InputEvent.KeyInputEvent event) {
         if (InventoryHelper.waitTicks > 0)
             return;
+        // Check toggle key
+        if (KeyBindings.showDefaultHotbar.isPressed()) {
+            showDefault = !showDefault;
+            Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
+        }
+        if (HotbarLogic.showDefault)
+            return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
         // Change hotbars
-        if (slot > -1 && currentItem == slot) {
+        if (slot > -1 && currentItem == slot && Config.numberOfHotbars > 1) {
             moveSelectionToNextHotbar();
         }
         // Select a slot
@@ -96,24 +106,26 @@ public class HotbarLogic {
             if (!Config.relativeHotbarKeys)
                 moveSelectionToFirstHotbar();
         }
-        // Check toggle key
-        if (KeyBindings.showDefaultHotbar.isPressed())
-            showDefault = !showDefault;
+        if (slot > -1)
+            resetTooltipTicks();
+    }
+
+    private void resetTooltipTicks() {
+        HotBarRenderer.tooltipTicks = 128;
     }
 
     private void moveSelectionToFirstHotbar() {
-        int awayFromZero = HotbarLogic.hotbarIndex;
-        if (awayFromZero == 0)
+        if (hotbarIndex == 0)
             return;
-        int slot = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-        for (int i = 0; i < Config.numberOfHotbars - awayFromZero; i++)
-            moveSelectionToNextHotbar();
-        InventoryHelper.setLastItem(slot);
-
+        InventoryHelper.swapHotbars(hotbarOrder[0], hotbarOrder[hotbarIndex]);
+        hotbarOrder[hotbarIndex] = hotbarOrder[0];
+        hotbarOrder[0] = 0;
+        hotbarIndex = 0;
     }
 
     public static void reset() {
         showDefault = false;
+        updateTooltips();
         hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
             hotbarOrder[i] = i;
@@ -154,6 +166,7 @@ public class HotbarLogic {
         } catch (IOException ignore) {}
         this.dimWorld = this.world; // Backup incase it was just a dimension change
         this.world = null;
+        updateTooltips();
     }
 
     public void load(World world) {
@@ -170,6 +183,7 @@ public class HotbarLogic {
                     if (worldJson.getId().equals(getWorldId(world))) {
                         hotbarIndex = worldJson.getIndex();
                         hotbarOrder = worldJson.getOrder();
+                        updateTooltips();
                         break;
                     } else
                         reset();
@@ -180,6 +194,10 @@ public class HotbarLogic {
         } catch (FileNotFoundException ignore) {
             reset();
         }
+    }
+
+    private static void updateTooltips() {
+        Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
     }
 
     private String getWorldId() {
