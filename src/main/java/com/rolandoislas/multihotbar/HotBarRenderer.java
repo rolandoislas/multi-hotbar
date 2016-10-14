@@ -53,10 +53,9 @@ public class HotBarRenderer extends Gui {
         ItemStack item = minecraft.thePlayer.inventory.getCurrentItem();
         if (item == null || tooltipTicks == 0)
             return;
-        ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth,
-                minecraft.displayHeight);
+        ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int x = scaledResolution.getScaledWidth() / 2 -
-                minecraft.fontRenderer.getStringWidth(item.getDisplayName()) / 2;
+                minecraft.fontRendererObj.getStringWidth(item.getDisplayName()) / 2;
         int y = coords[1] - 37 + (minecraft.playerController.shouldDrawHUD() ? 0 : 14);
         int color = (int) (tooltipTicks * 256f / 10f);
         color = color > 255 ? 255 : color;
@@ -64,7 +63,7 @@ public class HotBarRenderer extends Gui {
             GL11.glPushMatrix();
             GL11.glEnable(GL11.GL_BLEND);
             OpenGlHelper.glBlendFunc(770, 771, 1, 0);
-            minecraft.fontRenderer.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
+            minecraft.fontRendererObj.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
             GL11.glDisable(GL11.GL_BLEND);
             GL11.glPopMatrix();
         }
