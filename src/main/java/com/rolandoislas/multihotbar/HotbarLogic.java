@@ -7,6 +7,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -14,6 +15,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -322,6 +324,56 @@ public class HotbarLogic {
                 ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
                 if (stack == null)
                     return index;
+            }
+        }
+        return -1;
+    }
+
+    public void pickupEvent(EntityItemPickupEvent event) {
+        if (event.entityPlayer == null)
+            return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        int slot = getFirstCompatibleStack(event.item.getEntityItem());
+        slot = slot < 0 ? getFirstEmptyStack() : slot;
+        if (slot < 0)
+            return;
+        minecraft.thePlayer.onItemPickup(event.item, event.item.getEntityItem().stackSize);
+        minecraft.thePlayer.playSound("random.pop", 1, 1);
+        ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(slot);
+        if (stack == null) {
+            stack = event.item.getEntityItem().copy();
+            event.item.getEntityItem().stackSize = 0;
+        }
+        else {
+            int sizeLeft = stack.getMaxStackSize() - stack.stackSize;
+            if (sizeLeft >= event.item.getEntityItem().stackSize) {
+                stack.stackSize += event.item.getEntityItem().stackSize;
+                event.item.getEntityItem().stackSize = 0;
+            }
+            else {
+                stack.stackSize += sizeLeft;
+                event.item.getEntityItem().stackSize -= sizeLeft;
+            }
+        }
+        minecraft.thePlayer.inventory.setInventorySlotContents(slot, stack);
+        minecraft.thePlayer.inventory.mainInventory[slot].animationsToGo = 5;
+        minecraft.playerController.sendSlotPacket(stack, slot >= 9 ? slot :
+                minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
+        event.setCanceled(true);
+        if (event.item.getEntityItem().stackSize > 0)
+            pickupEvent(event);
+    }
+
+    private int getFirstCompatibleStack(ItemStack itemStack) {
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                int index = hotbarOrder[i] * 9 + j;
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
+                        ItemStack.areItemStackTagsEqual(stack, itemStack) &&
+                        stack.stackSize < stack.getMaxStackSize()) {
+                    return index;
+                }
             }
         }
         return -1;

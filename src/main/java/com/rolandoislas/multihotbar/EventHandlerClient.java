@@ -9,6 +9,7 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 
@@ -45,6 +46,11 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void inputEvent(InputEvent event) {
         hotbarLogic.inputEvent(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void pickupEvent(EntityItemPickupEvent event) {
+        hotbarLogic.pickupEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
