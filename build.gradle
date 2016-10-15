@@ -1,24 +1,22 @@
 buildscript {
     repositories {
-        mavenCentral()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
+        jcenter()
+        maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url = "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.8"
     }
 }
 
 apply plugin: 'forge'
+apply plugin: "com.matthewprenger.cursegradle"
 
-ext.branch = System.getenv('DRONE_BRANCH');
-version =  (ext.branch != null && ext.branch != "master") ? "dev-" + System.getenv('DRONE_BUILD_NUMBER') : "1.7.10-1.1.1"
+ext.branch = System.getenv('TRAVIS_BRANCH')
+ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
+version = "1.7.10-2.1"
+version =  (ext.branch != null && ext.branch != "master") ? version + "-dev-" + ext.build : version
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
@@ -27,30 +25,24 @@ minecraft {
     runDir = "run"
 }
 
-jar {
-    manifest {
-        attributes 'FMLCorePlugin': 'com.rolandoislas.multihotbar.FMLLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
+curseforge {
+    apiKey = System.getenv("CURSE_API_KEY") ?: ""
+    project {
+        id = "246054"
+        changelog = System.getenv("TRAVIS_COMMIT_MESSAGE") ?: ""
+        releaseType = System.getenv("TRAVIS_TAG") ? "release" : "alpha"
+        mainArtifact jar
     }
+}
+
+sourceCompatibility = targetCompatibility = "1.6" // Need this here so eclipse task generates correctly.
+compileJava {
+    sourceCompatibility = targetCompatibility = "1.6"
 }
 
 idea.module.inheritOutputDirs = true
 
-dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
-}
+dependencies {}
 
 processResources
 {

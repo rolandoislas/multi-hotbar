@@ -3,6 +3,9 @@
 Multi-Hotbar
 ---
 
+Release: [![Build Status](https://travis-ci.org/rolandoislas/multi-hotbar.svg?branch=master)](https://travis-ci.org/rolandoislas/multi-hotbar)
+Dev: [![Build Status](https://travis-ci.org/rolandoislas/multi-hotbar.svg?branch=develop)](https://travis-ci.org/rolandoislas/multi-hotbar)
+
 Multi-Hotbar is a Minecraft Forge mod that extends Minecraft's hotbar past nine slots.
 
 ## Install

@@ -9,8 +9,8 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -19,7 +19,6 @@ import org.lwjgl.opengl.GL11;
 public class EventHandlerClient {
     private HotBarRenderer hotbarRender;
     private HotbarLogic hotbarLogic;
-    private boolean renderPosted = true;
 
     public EventHandlerClient() {
         hotbarRender = new HotBarRenderer();
@@ -27,25 +26,13 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
-    public void handleHotbarRender(RenderGameOverlayEvent event) {
-        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
-            if (!HotbarLogic.showDefault) {
-                event.setCanceled(true);
-                hotbarRender.render();
-            }
-        }
+    public void renderGameOverlayEvent(RenderGameOverlayEvent event) {
+        hotbarRender.renderOverlayEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void inputEvent(InputEvent event) {
-        hotbarLogic.inputEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
@@ -54,92 +41,43 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
-    public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
-        // If events preceding the hotbar are cancelled pop the maxtrix before the hotbar in rendered
-        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
-            GL11.glPopMatrix();
-            renderPosted = true;
-        }
-        // Apply the translation
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
-            if (!renderPosted)
-                GL11.glPopMatrix();
-            renderPosted = false;
-            GL11.glPushMatrix();
-            GL11.glTranslatef(0, -22, 0);
-        }
+    public void renderGameOverlayEventPre(RenderGameOverlayEvent.Pre event) {
+        hotbarRender.renderGameOverlayPre(event);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    @SuppressWarnings("unused")
-    public void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
-            renderPosted = true;
-            GL11.glPopMatrix();
-        }
-    }
-
-    private boolean isElementToShift(RenderGameOverlayEvent.ElementType type) {
-        return type == RenderGameOverlayEvent.ElementType.CHAT ||
-                type == RenderGameOverlayEvent.ElementType.HEALTH ||
-                type == RenderGameOverlayEvent.ElementType.AIR ||
-                type == RenderGameOverlayEvent.ElementType.ARMOR ||
-                type == RenderGameOverlayEvent.ElementType.EXPERIENCE ||
-                type == RenderGameOverlayEvent.ElementType.FOOD ||
-                type == RenderGameOverlayEvent.ElementType.HEALTHMOUNT ||
-                type == RenderGameOverlayEvent.ElementType.JUMPBAR;
+    public void renderOverlayEventPost(RenderGameOverlayEvent.Post event) {
+        hotbarRender.renderOverlayEventPost(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.modID.equals(MultiHotbar.MODID)) {
-            Config.config.save();
-            Config.reload();
-        }
+        Config.configChanged(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
     public void keyPressed(InputEvent.KeyInputEvent event) {
         hotbarLogic.keyPressed(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void worldLoad(WorldEvent.Load event) {
-        hotbarLogic.load(event.world);
+    public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        hotbarLogic.connectedToServer(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void connectToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        hotbarLogic.setWorldAddress(event.manager.getSocketAddress().toString());
+    public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        hotbarLogic.disconnectedFromServer(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void worldUnload(WorldEvent.Unload event) {
-        hotbarLogic.save();
+    public void deathEvent(LivingDeathEvent event) {
+        hotbarLogic.deathEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void changeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        hotbarLogic.playerChangedDimension();
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void playerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (!event.player.worldObj.getGameRules().getGameRuleBooleanValue("keepInventory"))
-            HotbarLogic.reset();
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void playerTick(TickEvent.PlayerTickEvent event) {
         InventoryHelper.tick();
+        hotbarLogic.playerTick(event);
     }
 }

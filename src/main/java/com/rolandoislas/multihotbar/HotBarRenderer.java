@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -21,6 +22,7 @@ public class HotBarRenderer extends Gui {
     public static int tooltipTicks = 128;
     private final ResourceLocation WIDGETS;
     private final Minecraft minecraft;
+    private boolean renderPosted = true;
 
     public HotBarRenderer() {
         super();
@@ -28,7 +30,13 @@ public class HotBarRenderer extends Gui {
         this.WIDGETS = new ResourceLocation("minecraft", "textures/gui/widgets.png");
     }
 
-    public void render() {
+    public void render(RenderGameOverlayEvent event) {
+        // Check if hotbar should render
+        if (!(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable() &&
+                !HotbarLogic.showDefault))
+            return;
+        event.setCanceled(true);
+        // Render
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
         if (Config.numberOfHotbars == 1)
@@ -77,7 +85,7 @@ public class HotBarRenderer extends Gui {
     }
 
     private void drawSelection() {
-        if (InventoryHelper.waitTicks > 0)
+        if (InventoryHelper.waitForInventoryTweaks())
             return;
         // Draw selection indicator
         int slot = minecraft.thePlayer.inventory.currentItem;
@@ -176,5 +184,51 @@ public class HotBarRenderer extends Gui {
         }
         RenderHelper.disableStandardItemLighting();
         GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+    }
+
+    public void renderGameOverlayPre(RenderGameOverlayEvent.Pre event) {
+        shiftOverlayUp(event);
+    }
+
+    private void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
+        // If events preceding the hotbar are cancelled pop the maxtrix before the hotbar in rendered
+        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
+            GL11.glPopMatrix();
+            renderPosted = true;
+        }
+        // Apply the translation
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+            if (!renderPosted)
+                GL11.glPopMatrix();
+            renderPosted = false;
+            GL11.glPushMatrix();
+            GL11.glTranslatef(0, -22, 0);
+        }
+    }
+
+    public void renderOverlayEventPost(RenderGameOverlayEvent.Post event) {
+        shiftOverlayDown(event);
+    }
+
+    private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+            renderPosted = true;
+            GL11.glPopMatrix();
+        }
+    }
+
+    public void renderOverlayEvent(RenderGameOverlayEvent event) {
+        render(event);
+    }
+
+    private boolean isElementToShift(RenderGameOverlayEvent.ElementType type) {
+        return type == RenderGameOverlayEvent.ElementType.CHAT ||
+                type == RenderGameOverlayEvent.ElementType.HEALTH ||
+                type == RenderGameOverlayEvent.ElementType.AIR ||
+                type == RenderGameOverlayEvent.ElementType.ARMOR ||
+                type == RenderGameOverlayEvent.ElementType.EXPERIENCE ||
+                type == RenderGameOverlayEvent.ElementType.FOOD ||
+                type == RenderGameOverlayEvent.ElementType.HEALTHMOUNT ||
+                type == RenderGameOverlayEvent.ElementType.JUMPBAR;
     }
 }
