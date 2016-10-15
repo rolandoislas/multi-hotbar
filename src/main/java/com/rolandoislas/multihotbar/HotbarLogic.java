@@ -339,6 +339,7 @@ public class HotbarLogic {
             return;
         minecraft.thePlayer.onItemPickup(event.item, event.item.getEntityItem().stackSize);
         minecraft.thePlayer.playSound("random.pop", 1, 1);
+        resetTooltipTicks();
         ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(slot);
         if (stack == null) {
             stack = event.item.getEntityItem().copy();
