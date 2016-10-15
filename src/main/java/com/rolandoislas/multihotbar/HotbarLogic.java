@@ -4,7 +4,12 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.inventory.Slot;
 import net.minecraft.util.*;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -42,11 +47,11 @@ public class HotbarLogic {
         if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
             return;
         // Scrolled
-        if (event.dwheel != 0) {
+        if (event.getDwheel() != 0) {
             // Handle hotbar selector scroll
             EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
             // Scrolled right
-            if (event.dwheel < 0) {
+            if (event.getDwheel() < 0) {
                 if (KeyBindings.scrollModifier.isKeyDown())
                     moveSelectionToNextHotbar();
                 else if (player.inventory.currentItem < InventoryPlayer.getHotbarSize() - 1)
@@ -245,10 +250,10 @@ public class HotbarLogic {
     private void pickBlock() {
         Minecraft minecraft = Minecraft.getMinecraft();
         double distance = minecraft.playerController.getBlockReachDistance();
-        MovingObjectPosition target = minecraft.getRenderViewEntity().rayTrace(distance, 1);
-        Vec3 position = minecraft.getRenderViewEntity().getPositionEyes(1);
-        Vec3 look = minecraft.getRenderViewEntity().getLook(1);
-        Vec3 pick = position.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
+        RayTraceResult target = minecraft.getRenderViewEntity().rayTrace(distance, 1);
+        Vec3d position = minecraft.getRenderViewEntity().getPositionEyes(1);
+        Vec3d look = minecraft.getRenderViewEntity().getLook(1);
+        Vec3d pick = position.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
         List entities = minecraft.theWorld.getEntitiesInAABBexcluding(minecraft.getRenderViewEntity(),
                 minecraft.getRenderViewEntity().getEntityBoundingBox().addCoord(look.xCoord * distance,
                         look.yCoord * distance, look.zCoord * distance).expand(1, 1, 1),
@@ -263,27 +268,25 @@ public class HotbarLogic {
             if (entity.canBeCollidedWith()) {
                 float borderSize = entity.getCollisionBorderSize();
                 AxisAlignedBB axisalignedbb = entity.getEntityBoundingBox().expand(borderSize, borderSize, borderSize);
-                MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(position, pick);
-                if (movingobjectposition != null)
-                    target = new MovingObjectPosition(entity, movingobjectposition.hitVec);
+                RayTraceResult entityPosition = axisalignedbb.calculateIntercept(position, pick);
+                if (entityPosition != null)
+                    target = new RayTraceResult(entity, entityPosition.hitVec);
             }
         }
 
-        ItemStack result;
+        ItemStack result = null;
         boolean isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
 
-        if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-            Block block = minecraft.theWorld.getBlockState(target.getBlockPos()).getBlock();
+        if (target.typeOfHit == RayTraceResult.Type.BLOCK) {
+            IBlockState blockState = minecraft.theWorld.getBlockState(target.getBlockPos());
 
-            if (block.isAir(minecraft.theWorld, target.getBlockPos()))
+            if (blockState.getBlock().isAir(blockState, minecraft.theWorld, target.getBlockPos()))
                 return;
 
-            result = block.getPickBlock(target, minecraft.theWorld, target.getBlockPos(), minecraft.thePlayer);
+            result = blockState.getBlock().getPickBlock(blockState, target, minecraft.theWorld, target.getBlockPos(),
+                    minecraft.thePlayer);
         }
-        else {
-            if (target.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY || target.entityHit == null ||
-                    !isCreative)
-                return;
+        else if (target.typeOfHit == RayTraceResult.Type.ENTITY && target.entityHit != null || isCreative) {
             result = target.entityHit.getPickedResult(target);
         }
 
@@ -335,30 +338,30 @@ public class HotbarLogic {
     }
 
     public void pickupEvent(EntityItemPickupEvent event) {
-        if (event.entityPlayer == null)
+        if (event.getEntityPlayer() == null)
             return;
         Minecraft minecraft = Minecraft.getMinecraft();
-        int slot = getFirstCompatibleStack(event.item.getEntityItem());
+        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
         slot = slot < 0 ? getFirstEmptyStack() : slot;
         if (slot < 0)
             return;
-        minecraft.thePlayer.onItemPickup(event.item, event.item.getEntityItem().stackSize);
-        minecraft.thePlayer.playSound("random.pop", 1, 1);
+        minecraft.thePlayer.onItemPickup(event.getItem(), event.getItem().getEntityItem().stackSize);
+        minecraft.thePlayer.playSound(new SoundEvent(new ResourceLocation("minecraft", "entity.item.pickup")), 1, 1);
         resetTooltipTicks();
         ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(slot);
         if (stack == null) {
-            stack = event.item.getEntityItem().copy();
-            event.item.getEntityItem().stackSize = 0;
+            stack = event.getItem().getEntityItem().copy();
+            event.getItem().getEntityItem().stackSize = 0;
         }
         else {
             int sizeLeft = stack.getMaxStackSize() - stack.stackSize;
-            if (sizeLeft >= event.item.getEntityItem().stackSize) {
-                stack.stackSize += event.item.getEntityItem().stackSize;
-                event.item.getEntityItem().stackSize = 0;
+            if (sizeLeft >= event.getItem().getEntityItem().stackSize) {
+                stack.stackSize += event.getItem().getEntityItem().stackSize;
+                event.getItem().getEntityItem().stackSize = 0;
             }
             else {
                 stack.stackSize += sizeLeft;
-                event.item.getEntityItem().stackSize -= sizeLeft;
+                event.getItem().getEntityItem().stackSize -= sizeLeft;
             }
         }
         minecraft.thePlayer.inventory.setInventorySlotContents(slot, stack);
@@ -366,7 +369,7 @@ public class HotbarLogic {
         minecraft.playerController.sendSlotPacket(stack, slot >= 9 ? slot :
                 minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
         event.setCanceled(true);
-        if (event.item.getEntityItem().stackSize > 0)
+        if (event.getItem().getEntityItem().stackSize > 0)
             pickupEvent(event);
     }
 

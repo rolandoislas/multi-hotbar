@@ -29,7 +29,7 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SuppressWarnings("unused")
     public void handleHotbarRender(RenderGameOverlayEvent event) {
-        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
+        if (event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
             if (!HotbarLogic.showDefault) {
                 event.setCanceled(true);
                 hotbarRender.render();
@@ -57,12 +57,12 @@ public class EventHandlerClient {
     @SuppressWarnings("unused")
     public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
         // If events preceding the hotbar are cancelled pop the maxtrix before the hotbar in rendered
-        if (event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
+        if (event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
             GL11.glPopMatrix();
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -74,7 +74,7 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     @SuppressWarnings("unused")
     public void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
             renderPosted = true;
             GL11.glPopMatrix();
         }
@@ -94,7 +94,7 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
     public void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.modID.equals(MultiHotbar.MODID)) {
+        if (event.getModID().equals(MultiHotbar.MODID)) {
             Config.config.save();
             Config.reload();
         }
@@ -109,13 +109,13 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
     public void worldLoad(WorldEvent.Load event) {
-        hotbarLogic.load(event.world);
+        hotbarLogic.load(event.getWorld());
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
     public void connectToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        hotbarLogic.setWorldAddress(event.manager.getRemoteAddress().toString());
+        hotbarLogic.setWorldAddress(event.getManager().getRemoteAddress().toString());
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
