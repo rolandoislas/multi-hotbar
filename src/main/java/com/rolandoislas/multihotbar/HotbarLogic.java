@@ -1,35 +1,22 @@
 package com.rolandoislas.multihotbar;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.inventory.Slot;
-import net.minecraft.util.*;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-
-import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -42,6 +29,8 @@ public class HotbarLogic {
     private World world;
     private String worldAddress;
     private World dimWorld;
+    private int pickupSlot = -1;
+    private int correctPickupSlot = -1;
 
     public void mouseEvent(MouseEvent event) {
         if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
@@ -254,39 +243,16 @@ public class HotbarLogic {
     }
 
     public void pickupEvent(EntityItemPickupEvent event) {
-        if (event.getEntityPlayer() == null)
-            return;
-        Minecraft minecraft = Minecraft.getMinecraft();
+        // Check if compatible stack is in inventory
         int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
-        slot = slot < 0 ? getFirstEmptyStack() : slot;
+        if (slot >= 0)
+            return;
+        // Get the first empty stack
+        slot = event.getEntityPlayer().inventory.getFirstEmptyStack();
         if (slot < 0)
             return;
-        minecraft.thePlayer.onItemPickup(event.getItem(), event.getItem().getEntityItem().stackSize);
-        minecraft.thePlayer.playSound(new SoundEvent(new ResourceLocation("minecraft", "entity.item.pickup")), 1, 1);
-        resetTooltipTicks();
-        ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(slot);
-        if (stack == null) {
-            stack = event.getItem().getEntityItem().copy();
-            event.getItem().getEntityItem().stackSize = 0;
-        }
-        else {
-            int sizeLeft = stack.getMaxStackSize() - stack.stackSize;
-            if (sizeLeft >= event.getItem().getEntityItem().stackSize) {
-                stack.stackSize += event.getItem().getEntityItem().stackSize;
-                event.getItem().getEntityItem().stackSize = 0;
-            }
-            else {
-                stack.stackSize += sizeLeft;
-                event.getItem().getEntityItem().stackSize -= sizeLeft;
-            }
-        }
-        minecraft.thePlayer.inventory.setInventorySlotContents(slot, stack);
-        minecraft.thePlayer.inventory.mainInventory[slot].animationsToGo = 5;
-        minecraft.playerController.sendSlotPacket(stack, slot >= 9 ? slot :
-                minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
-        event.setCanceled(true);
-        if (event.getItem().getEntityItem().stackSize > 0)
-            pickupEvent(event);
+        this.pickupSlot = slot;
+        this.correctPickupSlot = getFirstEmptyStack();
     }
 
     private int getFirstCompatibleStack(ItemStack itemStack) {
@@ -302,5 +268,16 @@ public class HotbarLogic {
             }
         }
         return -1;
+    }
+
+    public void tickEvent(TickEvent.ClientTickEvent event) {
+        if (this.pickupSlot < 0 || this.correctPickupSlot < 0)
+            return;
+        if (Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(pickupSlot) == null)
+            return;
+        int clickSlotFirst = this.pickupSlot >= 9 ? this.pickupSlot : 36 + this.pickupSlot;
+        int clickSlotSecond = this.correctPickupSlot >= 9 ? this.correctPickupSlot : 36 + this.correctPickupSlot;
+        InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
+        this.pickupSlot = this.correctPickupSlot = -1;
     }
 }

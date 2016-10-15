@@ -66,7 +66,7 @@ public class InventoryHelper {
         }
     }
 
-    private static void swapSlot(int firstSlot, int secondSlot) {
+    static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         int window = player.inventoryContainer.windowId;
         Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);

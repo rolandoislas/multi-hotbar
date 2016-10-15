@@ -48,6 +48,11 @@ public class EventHandlerClient {
         hotbarLogic.pickupEvent(event);
     }
 
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void tickEvent(TickEvent.ClientTickEvent event) {
+        hotbarLogic.tickEvent(event);
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     @SuppressWarnings("unused")
     public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
