@@ -2,6 +2,7 @@ package com.rolandoislas.multihotbar;
 
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -40,6 +41,16 @@ public class EventHandlerClient {
     @SuppressWarnings("unused")
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void inputEvent(InputEvent event) {
+        hotbarLogic.inputEvent(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void pickupEvent(EntityItemPickupEvent event) {
+        hotbarLogic.pickupEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

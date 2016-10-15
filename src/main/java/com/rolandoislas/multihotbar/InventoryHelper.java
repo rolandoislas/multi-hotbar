@@ -2,6 +2,7 @@ package com.rolandoislas.multihotbar;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Loader;
@@ -25,13 +26,8 @@ public class InventoryHelper {
         for (int i = 0; i < InventoryPlayer.getHotbarSize(); i++) {
             ItemStack firstItem = player.inventory.getStackInSlot(firstSlotIndex + i);
             ItemStack secondItem = player.inventory.getStackInSlot(secondSlotIndex + i);
-            if (firstItem != null || secondItem != null) {
-                int window = player.inventoryContainer.windowId;
-                // window id, slot, right click (int bool), shift (int bool), player
-                Minecraft.getMinecraft().playerController.windowClick(window, firstSlotindex936 + i, 0, 0, player);
-                Minecraft.getMinecraft().playerController.windowClick(window, secondSlotindex936 + i, 0, 0, player);
-                Minecraft.getMinecraft().playerController.windowClick(window, firstSlotindex936 + i, 0, 0, player);
-            }
+            if (firstItem != null || secondItem != null)
+                swapSlot(firstSlotindex936 + i, secondSlotindex936 + i);
             if (Loader.isModLoaded("inventorytweaks")) {
                 // Set currentItem to a mull slot or two item slots
                 if ((!slotFound) && (firstItem == null || secondItem != null)) {
@@ -69,7 +65,15 @@ public class InventoryHelper {
         }
     }
 
-    public static void setLastItem(int lastItem) {
-        InventoryHelper.lastItem = lastItem;
+    private static void swapSlot(int firstSlot, int secondSlot) {
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        int window = player.inventoryContainer.windowId;
+        // window id, slot, right click (int bool), shift (int bool), player
+        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, 0, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, 4, 0, 0, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, 0, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, 0, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, 4, 0, 0, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, 0, player);
     }
 }

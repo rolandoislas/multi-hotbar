@@ -1,19 +1,30 @@
 package com.rolandoislas.multihotbar;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import net.minecraft.util.*;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
+
+import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -104,7 +115,7 @@ public class HotbarLogic {
         else if (slot > - 1) {
             Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot;
             if (!Config.relativeHotbarKeys)
-                moveSelectionToFirstHotbar();
+                moveSelectionToHotbar(0);
         }
         if (slot > -1)
             resetTooltipTicks();
@@ -114,13 +125,13 @@ public class HotbarLogic {
         HotBarRenderer.tooltipTicks = 128;
     }
 
-    private void moveSelectionToFirstHotbar() {
-        if (hotbarIndex == 0)
+    private void moveSelectionToHotbar(int index) {
+        if (hotbarIndex == index)
             return;
-        InventoryHelper.swapHotbars(hotbarOrder[0], hotbarOrder[hotbarIndex]);
-        hotbarOrder[hotbarIndex] = hotbarOrder[0];
-        hotbarOrder[0] = 0;
-        hotbarIndex = 0;
+        InventoryHelper.swapHotbars(hotbarOrder[index], hotbarOrder[hotbarIndex]);
+        hotbarOrder[hotbarIndex] = hotbarOrder[index];
+        hotbarOrder[index] = 0;
+        hotbarIndex = index;
     }
 
     public static void reset() {
@@ -223,5 +234,154 @@ public class HotbarLogic {
 
     public void playerChangedDimension() {
         load(this.dimWorld);
+    }
+
+    public void inputEvent(InputEvent event) {
+        // Pick block
+        while (KeyBindings.isPickBlockPressed())
+            pickBlock();
+    }
+
+    private void pickBlock() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        double distance = minecraft.playerController.getBlockReachDistance();
+        MovingObjectPosition target = minecraft.getRenderViewEntity().rayTrace(distance, 1);
+        Vec3 position = minecraft.getRenderViewEntity().getPositionEyes(1);
+        Vec3 look = minecraft.getRenderViewEntity().getLook(1);
+        Vec3 pick = position.addVector(look.xCoord * distance, look.yCoord * distance, look.zCoord * distance);
+        List entities = minecraft.theWorld.getEntitiesInAABBexcluding(minecraft.getRenderViewEntity(),
+                minecraft.getRenderViewEntity().getEntityBoundingBox().addCoord(look.xCoord * distance,
+                        look.yCoord * distance, look.zCoord * distance).expand(1, 1, 1),
+                Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>() {
+                    @Override
+                    public boolean apply(Entity input) {
+                        return input.canBeCollidedWith();
+                    }
+                }));
+        for (Object e : entities) {
+            Entity entity = (Entity) e;
+            if (entity.canBeCollidedWith()) {
+                float borderSize = entity.getCollisionBorderSize();
+                AxisAlignedBB axisalignedbb = entity.getEntityBoundingBox().expand(borderSize, borderSize, borderSize);
+                MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(position, pick);
+                if (movingobjectposition != null)
+                    target = new MovingObjectPosition(entity, movingobjectposition.hitVec);
+            }
+        }
+
+        ItemStack result;
+        boolean isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
+
+        if (target.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            Block block = minecraft.theWorld.getBlockState(target.getBlockPos()).getBlock();
+
+            if (block.isAir(minecraft.theWorld, target.getBlockPos()))
+                return;
+
+            result = block.getPickBlock(target, minecraft.theWorld, target.getBlockPos(), minecraft.thePlayer);
+        }
+        else {
+            if (target.typeOfHit != MovingObjectPosition.MovingObjectType.ENTITY || target.entityHit == null ||
+                    !isCreative)
+                return;
+            result = target.entityHit.getPickedResult(target);
+        }
+
+        if (result == null)
+            return;
+
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(hotbarOrder[i] * 9 + j);
+                if (stack != null && stack.isItemEqual(result) && ItemStack.areItemStackTagsEqual(stack, result)) {
+                    minecraft.thePlayer.inventory.currentItem = j;
+                    moveSelectionToHotbar(i);
+                    return;
+                }
+            }
+        }
+
+        if (!isCreative)
+            return;
+
+        int slot = getFirstEmptyStack();
+        if (slot < 0)
+            slot = minecraft.thePlayer.inventory.currentItem;
+        int hotbarIndexRaw = (int) Math.floor(slot / 9);
+        int hotbarIndex = 0;
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            if (hotbarOrder[i] == hotbarIndexRaw) {
+                hotbarIndex = i;
+                break;
+            }
+        }
+        minecraft.thePlayer.inventory.currentItem = slot - hotbarIndexRaw * 9;
+        minecraft.thePlayer.inventory.setInventorySlotContents(slot, result);
+        minecraft.playerController.sendSlotPacket(result, slot >= 9 ? slot :
+                minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
+        moveSelectionToHotbar(hotbarIndex);
+    }
+
+    private int getFirstEmptyStack() {
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                int index = hotbarOrder[i] * 9 + j;
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                if (stack == null)
+                    return index;
+            }
+        }
+        return -1;
+    }
+
+    public void pickupEvent(EntityItemPickupEvent event) {
+        if (event.entityPlayer == null)
+            return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        int slot = getFirstCompatibleStack(event.item.getEntityItem());
+        slot = slot < 0 ? getFirstEmptyStack() : slot;
+        if (slot < 0)
+            return;
+        minecraft.thePlayer.onItemPickup(event.item, event.item.getEntityItem().stackSize);
+        minecraft.thePlayer.playSound("random.pop", 1, 1);
+        resetTooltipTicks();
+        ItemStack stack = minecraft.thePlayer.inventory.getStackInSlot(slot);
+        if (stack == null) {
+            stack = event.item.getEntityItem().copy();
+            event.item.getEntityItem().stackSize = 0;
+        }
+        else {
+            int sizeLeft = stack.getMaxStackSize() - stack.stackSize;
+            if (sizeLeft >= event.item.getEntityItem().stackSize) {
+                stack.stackSize += event.item.getEntityItem().stackSize;
+                event.item.getEntityItem().stackSize = 0;
+            }
+            else {
+                stack.stackSize += sizeLeft;
+                event.item.getEntityItem().stackSize -= sizeLeft;
+            }
+        }
+        minecraft.thePlayer.inventory.setInventorySlotContents(slot, stack);
+        minecraft.thePlayer.inventory.mainInventory[slot].animationsToGo = 5;
+        minecraft.playerController.sendSlotPacket(stack, slot >= 9 ? slot :
+                minecraft.thePlayer.inventoryContainer.inventorySlots.size() - 9 + slot);
+        event.setCanceled(true);
+        if (event.item.getEntityItem().stackSize > 0)
+            pickupEvent(event);
+    }
+
+    private int getFirstCompatibleStack(ItemStack itemStack) {
+        for (int i = 0; i < Config.numberOfHotbars; i++) {
+            for (int j = 0; j < 9; j++) {
+                int index = hotbarOrder[i] * 9 + j;
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
+                        ItemStack.areItemStackTagsEqual(stack, itemStack) &&
+                        stack.stackSize < stack.getMaxStackSize()) {
+                    return index;
+                }
+            }
+        }
+        return -1;
     }
 }

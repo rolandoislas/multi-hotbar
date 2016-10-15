@@ -156,7 +156,18 @@ public class HotBarRenderer extends Gui {
             if (item != null) {
                 int itemX = getXForSlot(hotbarIndex, i - slotIndex * 9);
                 int itemY = getYForSlot(hotbarIndex);
+                float pickupAnimation = item.animationsToGo - 1;
+                if (pickupAnimation > 0.0F) {
+                    GL11.glPushMatrix();
+                    float scale = 1 + pickupAnimation / 5;
+                    GL11.glTranslatef(itemX + 8, itemY + 12, 0);
+                    GL11.glScalef(1 / scale, scale + 1 / 2, 1);
+                    GL11.glTranslatef(-(itemX + 8), -(itemY + 12), 0);
+                }
                 minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
+                if (pickupAnimation > 0.0F)
+                    GL11.glPopMatrix();
+
                 minecraft.getRenderItem().renderItemOverlayIntoGUI(minecraft.fontRendererObj, item, itemX, itemY,
                         item.stackSize > 1 ? String.valueOf(item.stackSize) : "");
             }
