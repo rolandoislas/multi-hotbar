@@ -69,12 +69,8 @@ public class InventoryHelper {
     private static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         int window = player.inventoryContainer.windowId;
-        ClickType clickType = ClickType.PICKUP_ALL;
-        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, clickType, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, 5, 0, clickType, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, clickType, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, clickType, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, 5, 0, clickType, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, clickType, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
+        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
     }
 }
