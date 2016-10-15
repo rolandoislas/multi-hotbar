@@ -44,11 +44,6 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void inputEvent(InputEvent event) {
-        hotbarLogic.inputEvent(event);
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
     public void pickupEvent(EntityItemPickupEvent event) {
         hotbarLogic.pickupEvent(event);
     }
