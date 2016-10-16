@@ -4,18 +4,23 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -27,10 +32,9 @@ public class HotbarLogic {
     public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
     public static boolean showDefault = false;
     private static WorldJson[] worldJsonArray;
-    private World world;
     private String worldAddress;
-    private World dimWorld;
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
+    private boolean isWorldLocal;
 
     public void mouseEvent(MouseEvent event) {
         if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
@@ -132,9 +136,7 @@ public class HotbarLogic {
             hotbarOrder[i] = i;
     }
 
-    public void save() {
-        if (this.world == null)
-            return;
+    private void save() {
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
             boolean found = false;
@@ -165,15 +167,9 @@ public class HotbarLogic {
             writer.write(json);
             writer.close();
         } catch (IOException ignore) {}
-        this.dimWorld = this.world; // Backup incase it was just a dimension change
-        this.world = null;
-        updateTooltips();
     }
 
-    public void load(World world) {
-        if (this.world != null)
-            return;
-        this.world = world;
+    private void load() {
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
             Gson gson = new Gson();
@@ -181,10 +177,9 @@ public class HotbarLogic {
             worldJsonArray = gson.fromJson(reader, WorldJson[].class);
             if (worldJsonArray != null) {
                 for (WorldJson worldJson : worldJsonArray) {
-                    if (worldJson.getId().equals(getWorldId(world))) {
+                    if (worldJson.getId().equals(getWorldId())) {
                         hotbarIndex = worldJson.getIndex();
                         hotbarOrder = worldJson.getOrder();
-                        updateTooltips();
                         break;
                     } else
                         reset();
@@ -202,28 +197,26 @@ public class HotbarLogic {
     }
 
     private String getWorldId() {
-        return getWorldId(this.world);
-    }
-
-    private String getWorldId(World world) {
-        String id = "";
-        if (!world.isRemote) {
-            id += world.getWorldInfo().getSeed() + world.getWorldInfo().getWorldName() + world.isRemote +
+        // Construct unique id or use world address if remote
+        String id;
+        if (isWorldLocal) {
+            World world = Minecraft.getMinecraft().getIntegratedServer().getEntityWorld();
+            id = world.getWorldInfo().getSeed() + world.getWorldInfo().getWorldName() +
                     world.getSaveHandler().getWorldDirectory().getAbsolutePath();
         }
         else {
             id = worldAddress;
         }
+        // MD5 because the raw id looks horrible with an escaped path and spaces in it
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] array = md.digest(id.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte anArray : array)
+                sb.append(Integer.toHexString((anArray & 0xFF) | 0x100).substring(1, 3));
+            id = sb.toString();
+        } catch (NoSuchAlgorithmException ignore) {}
         return id;
-    }
-
-
-    public void setWorldAddress(String worldAddress) {
-        this.worldAddress = worldAddress;
-    }
-
-    public void playerChangedDimension() {
-        load(this.dimWorld);
     }
 
     private int getFirstEmptyStack() {
@@ -268,7 +261,7 @@ public class HotbarLogic {
         return -1;
     }
 
-    public void tickEvent(TickEvent.ClientTickEvent event) {
+    void tickEvent(TickEvent.ClientTickEvent event) {
         // Move the picked up item to the correct slot
         if (this.pickupSlot.isEmpty())
             return;
@@ -282,5 +275,25 @@ public class HotbarLogic {
         int clickSlotSecond = getFirstEmptyStack() >= 9 ? getFirstEmptyStack() : 36 + getFirstEmptyStack();
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
         this.pickupSlot.remove(0);
+    }
+
+    void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        worldAddress = event.getManager().getRemoteAddress().toString();
+        isWorldLocal = event.isLocal();
+        load();
+    }
+
+    void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        save();
+    }
+
+    void deathEvent(LivingDeathEvent event) {
+        if (event.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.getEntity();
+            if (!player.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()))
+                return;
+            if (!player.worldObj.getGameRules().getBoolean("keepInventory"))
+                HotbarLogic.reset();
+        }
     }
 }

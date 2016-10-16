@@ -2,13 +2,12 @@ package com.rolandoislas.multihotbar;
 
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.lwjgl.opengl.GL11;
@@ -44,7 +43,7 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void pickupEvent(EntityItemPickupEvent event) {
+    public void pickupEvent(EntityItemPickupEvent event) { // FIXME not called when connected to remote server
         hotbarLogic.pickupEvent(event);
     }
 
@@ -108,33 +107,19 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
-    public void worldLoad(WorldEvent.Load event) {
-        hotbarLogic.load(event.getWorld());
+    public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        hotbarLogic.connectedToServer(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        hotbarLogic.disconnectedFromServer(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
-    public void connectToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        hotbarLogic.setWorldAddress(event.getManager().getRemoteAddress().toString());
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void worldUnload(WorldEvent.Unload event) {
-        hotbarLogic.save();
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void changeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        hotbarLogic.playerChangedDimension();
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
-    public void playerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (!event.player.worldObj.getGameRules().getBoolean("keepInventory"))
-            HotbarLogic.reset();
+    public void deathEvent(LivingDeathEvent event) { // FIXME no player deaths trigger this event on remote server
+        hotbarLogic.deathEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
