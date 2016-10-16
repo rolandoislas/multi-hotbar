@@ -252,7 +252,7 @@ public class HotbarLogic {
         }
         // Get the first empty stack
         slot = event.getEntityPlayer().inventory.getFirstEmptyStack();
-        if (slot < 0)
+        if (slot < 0 || slot < 9 && hotbarIndex == 0)
             return;
         this.pickupSlot.add(slot);
     }
