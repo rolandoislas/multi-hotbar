@@ -120,12 +120,8 @@ public class HotbarLogic {
     }
 
     private void moveSelectionToHotbar(int index) {
-        if (hotbarIndex == index)
-            return;
-        InventoryHelper.swapHotbars(hotbarOrder[index], hotbarOrder[hotbarIndex]);
-        hotbarOrder[hotbarIndex] = hotbarOrder[index];
-        hotbarOrder[index] = 0;
-        hotbarIndex = index;
+        while (hotbarIndex != index)
+            moveSelectionToNextHotbar();
     }
 
     public static void reset() {
