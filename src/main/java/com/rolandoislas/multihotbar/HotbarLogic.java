@@ -134,6 +134,9 @@ public class HotbarLogic {
         hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
             hotbarOrder[i] = i;
+        try {
+            Minecraft.getMinecraft().thePlayer.inventory.currentItem = 0;
+        } catch (Exception ignore) {}
     }
 
     private void save() {
@@ -294,6 +297,20 @@ public class HotbarLogic {
                 return;
             if (!player.worldObj.getGameRules().getBoolean("keepInventory"))
                 HotbarLogic.reset();
+        }
+    }
+
+    public void playerTick(TickEvent.PlayerTickEvent event) {
+        /* Check for a player death on remote servers
+        The player death event is not called.
+        Let the death event handler evoke the reset if possible*/
+        if (isWorldLocal)
+            return;
+        if (!event.player.isEntityAlive()) {
+            for (ItemStack slot : event.player.inventoryContainer.getInventory())
+                if (slot != null)
+                    return;
+            reset();
         }
     }
 }

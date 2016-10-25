@@ -118,7 +118,7 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     @SuppressWarnings("unused")
-    public void deathEvent(LivingDeathEvent event) { // FIXME no player deaths trigger this event on remote server
+    public void deathEvent(LivingDeathEvent event) {
         hotbarLogic.deathEvent(event);
     }
 
@@ -126,5 +126,6 @@ public class EventHandlerClient {
     @SuppressWarnings("unused")
     public void playerTick(TickEvent.PlayerTickEvent event) {
         InventoryHelper.tick();
+        hotbarLogic.playerTick(event);
     }
 }
