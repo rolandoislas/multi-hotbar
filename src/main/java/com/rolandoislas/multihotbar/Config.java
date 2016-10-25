@@ -24,7 +24,7 @@ public class Config {
         }
         // Handle client config
         config.load();
-        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 1, MAX_HOTBARS,
+        numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 2, MAX_HOTBARS,
                 "Defines the amount of hotbars that should be displayed");
         relativeHotbarKeys = config.getBoolean("Relative Hotbar Keys", Configuration.CATEGORY_GENERAL, false,
                 "If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently " +
