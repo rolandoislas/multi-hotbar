@@ -2,7 +2,7 @@
 {
   "modid": "multihotbar",
   "name": "Multi-Hotbar",
-  "description": "Multi-Hotbar allows you to have a hotbar greater then 9 slots.",
+  "description": "Multi-Hotbar allows you to have a hotbar greater than 9 slots.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "https://github.com/rolandoislas/multi-hotbar",
