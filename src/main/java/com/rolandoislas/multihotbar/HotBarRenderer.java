@@ -3,11 +3,11 @@ package com.rolandoislas.multihotbar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 /**
@@ -28,8 +28,8 @@ public class HotBarRenderer extends Gui {
     }
 
     public void render() {
-        GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_LIGHTING);
+        GlStateManager.color(1, 1, 1, 1);
+        //GlStateManager.disableLighting();
         if (Config.numberOfHotbars == 1)
             drawSingle(0);
         else if (Config.numberOfHotbars == 2)
@@ -60,12 +60,12 @@ public class HotBarRenderer extends Gui {
         int color = (int) (tooltipTicks * 256f / 10f);
         color = color > 255 ? 255 : color;
         if (color > 0) {
-            GL11.glPushMatrix();
-            GL11.glEnable(GL11.GL_BLEND);
+            GlStateManager.pushMatrix();
+            GlStateManager.enableBlend();
             OpenGlHelper.glBlendFunc(770, 771, 1, 0);
             minecraft.fontRendererObj.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
-            GL11.glDisable(GL11.GL_BLEND);
-            GL11.glPopMatrix();
+            GlStateManager.disableBlend();
+            GlStateManager.popMatrix();
         }
     }
 
@@ -84,10 +84,12 @@ public class HotBarRenderer extends Gui {
         int x = coords[0];
         int y = coords[1];
         minecraft.getTextureManager().bindTexture(WIDGETS);
-        GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableLighting();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ZERO);
         zLevel += 100;
         minecraft.ingameGUI.drawTexturedModalRect(-1 + x + 20 * slot, y - 1, 0, HOTBAR_HEIGHT, SELECTOR_SIZE,
                 SELECTOR_SIZE);
@@ -140,16 +142,18 @@ public class HotBarRenderer extends Gui {
     private void drawHotbar(int x, int y) {
         // Draw hotbar
         minecraft.getTextureManager().bindTexture(WIDGETS);
-        GL11.glColor4f(1, 1, 1, 1);
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableLighting();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ZERO);
         minecraft.ingameGUI.drawTexturedModalRect(x, y, 0, 0, HOTBAR_WIDTH, HOTBAR_HEIGHT);
     }
 
     private void drawItems(int hotbarIndex, int slotIndex) {
         // Draw items on hotbar
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GlStateManager.enableRescaleNormal();
         RenderHelper.enableGUIStandardItemLighting();
         for (int i = slotIndex * 9; i < slotIndex * 9 + 9; i++) {
             ItemStack item = minecraft.thePlayer.inventory.getStackInSlot(i);
@@ -158,21 +162,19 @@ public class HotBarRenderer extends Gui {
                 int itemY = getYForSlot(hotbarIndex);
                 float pickupAnimation = item.animationsToGo - 1;
                 if (pickupAnimation > 0.0F) {
-                    GL11.glPushMatrix();
+                    GlStateManager.pushMatrix();
                     float scale = 1 + pickupAnimation / 5;
-                    GL11.glTranslatef(itemX + 8, itemY + 12, 0);
-                    GL11.glScalef(1 / scale, scale + 1 / 2, 1);
-                    GL11.glTranslatef(-(itemX + 8), -(itemY + 12), 0);
+                    GlStateManager.translate(itemX + 8, itemY + 12, 0);
+                    GlStateManager.scale(1 / scale, scale + 1 / 2, 1);
+                    GlStateManager.translate(-(itemX + 8), -(itemY + 12), 0);
                 }
                 minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
                 if (pickupAnimation > 0.0F)
-                    GL11.glPopMatrix();
-
-                minecraft.getRenderItem().renderItemOverlayIntoGUI(minecraft.fontRendererObj, item, itemX, itemY,
-                        item.stackSize > 1 ? String.valueOf(item.stackSize) : "");
+                    GlStateManager.popMatrix();
+                minecraft.getRenderItem().renderItemOverlays(minecraft.fontRendererObj, item, itemX, itemY);
             }
         }
         RenderHelper.disableStandardItemLighting();
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+        GlStateManager.disableRescaleNormal();
     }
 }
