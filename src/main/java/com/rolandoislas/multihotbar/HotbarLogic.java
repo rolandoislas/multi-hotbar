@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -35,6 +37,8 @@ public class HotbarLogic {
     private String worldAddress;
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
     private boolean isWorldLocal;
+    private ItemStack[] inventory;
+    private int serverPickupIgnoreTicks = 0;
 
     public void mouseEvent(MouseEvent event) {
         if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
@@ -222,11 +226,11 @@ public class HotbarLogic {
         return id;
     }
 
-    private int getFirstEmptyStack() {
+    private int getFirstEmptyStack(InventoryPlayer inventory) {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                ItemStack stack = inventory.getStackInSlot(index);
                 if (stack == null)
                     return index;
             }
@@ -236,7 +240,7 @@ public class HotbarLogic {
 
     public void pickupEvent(EntityItemPickupEvent event) {
         // Check if compatible stack is in inventory
-        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
+        int slot = getFirstCompatibleStack(event.getItem().getEntityItem(), event.getEntityPlayer().inventory);
         if (slot >= 0) {
             ItemStack stack = event.getEntityPlayer().inventory.getStackInSlot(slot);
             if (stack == null || stack.stackSize + event.getItem().getEntityItem().stackSize <= stack.getMaxStackSize())
@@ -244,16 +248,20 @@ public class HotbarLogic {
         }
         // Get the first empty stack
         slot = event.getEntityPlayer().inventory.getFirstEmptyStack();
-        if (slot < 0 || slot < 9 && hotbarIndex == 0)
+        // No space in inventory
+        if (slot < 0)
+            return;
+        // Does not need a move
+        if (slot == getFirstEmptyStack(event.getEntityPlayer().inventory))
             return;
         this.pickupSlot.add(slot);
     }
 
-    private int getFirstCompatibleStack(ItemStack itemStack) {
+    private int getFirstCompatibleStack(ItemStack itemStack, InventoryPlayer inventory) {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
+                ItemStack stack = inventory.getStackInSlot(index);
                 if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
                         ItemStack.areItemStackTagsEqual(stack, itemStack) &&
                         stack.stackSize < stack.getMaxStackSize()) {
@@ -264,18 +272,16 @@ public class HotbarLogic {
         return -1;
     }
 
-    void tickEvent(TickEvent.ClientTickEvent event) {
-        // Move the picked up item to the correct slot
+    private void reorderPickedupItem(TickEvent.PlayerTickEvent event) {
+        // Nothing to move
         if (this.pickupSlot.isEmpty())
             return;
-        if (this.pickupSlot.get(0) < 0) {
-            this.pickupSlot.remove(0);
+        // Wait for item to appear after an uncertain number of ticks
+        if (event.player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
             return;
-        }
-        if (Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(pickupSlot.get(0)) == null)
-            return;
+        // Move the picked up item to the correct slot
         int clickSlotFirst = this.pickupSlot.get(0) >= 9 ? this.pickupSlot.get(0) : 36 + this.pickupSlot.get(0);
-        int clickSlotSecond = getFirstEmptyStack() >= 9 ? getFirstEmptyStack() : 36 + getFirstEmptyStack();
+        int clickSlotSecond = getFirstEmptyStack(event.player.inventory) >= 9 ? getFirstEmptyStack(event.player.inventory) : 36 + getFirstEmptyStack(event.player.inventory);
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
         this.pickupSlot.remove(0);
     }
@@ -301,13 +307,96 @@ public class HotbarLogic {
     }
 
     public void playerTick(TickEvent.PlayerTickEvent event) {
-        /* Check for a player death on remote servers
-        The player death event is not called.
-        Let the death event handler evoke the reset if possible*/
+        reorderPickedupItem(event);
         if (isWorldLocal)
             return;
-        if (!event.player.isEntityAlive()) {
-            for (ItemStack slot : event.player.inventoryContainer.getInventory())
+        checkPlayerDeath(event.player);
+        checkItemPickedUp(event.player);
+    }
+
+	/**
+     * Check if the player has picked uo an item.
+     * Item pickup event is not called when connected to remote servers.
+     * Let the pickup event handler handle this when it can.
+     * @param player
+     */
+    private void checkItemPickedUp(EntityPlayer player) {
+        // Set the inventory
+        if (inventory == null ||
+                // Ignore if inventory is open TODO check inventory movement better
+                Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
+                serverPickupIgnoreTicks > 0) {
+            inventory = player.inventory.mainInventory.clone();
+            if (serverPickupIgnoreTicks > 0)
+                serverPickupIgnoreTicks--;
+        }
+        // Find the changed item
+        ArrayList<EntityItem> changed = new ArrayList<EntityItem>();
+        ArrayList<Integer> changedSlot = new ArrayList<Integer>();
+        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
+            if (
+                    // Check if there is an item in a slot that was empty
+                    (player.inventory.mainInventory[i] != null && inventory[i] == null) ||
+                    // Make sure the slots are equal
+                    player.inventory.mainInventory[i] != null &&
+                    !(player.inventory.mainInventory[i].isItemEqual(inventory[i]) &&
+                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory[i], inventory[i]))) {
+                ItemStack changedStack = player.inventory.mainInventory[i].copy();
+                changed.add(new EntityItem(player.worldObj, player.posX, player.posY, player.posY, changedStack));
+                changedSlot.add(i);
+            }
+        }
+        // If no item changed it was probably just an item removal.
+        if (!changed.isEmpty()) {
+            int size = changed.size();
+            if (size > 1 && areInventoryItemsSame(player.inventory.mainInventory, inventory))
+                return;
+            for (int i = 0; i < size; i++) {
+                int slot = changedSlot.get(0);
+                // Remove item from inventory to emulate the inventory state that the event handler expects
+                if (inventory[changedSlot.get(0)] == null)
+                    player.inventory.mainInventory[slot].stackSize = 0;
+                else
+                    player.inventory.mainInventory[slot].stackSize -= inventory[slot].stackSize;
+                if (player.inventory.mainInventory[slot].stackSize == 0)
+                    player.inventory.removeStackFromSlot(changedSlot.get(0));
+                // Create the pickup event
+                pickupEvent(new EntityItemPickupEvent(player, changed.get(0)));
+                serverPickupIgnoreTicks = 5;
+                // Add item back to inventory to emulate the event having already taking place and the tick handler will
+                // move it
+                player.inventory.setInventorySlotContents(slot, changed.get(0).getEntityItem().copy());
+                // Remove from array lists
+                changed.remove(0);
+                changedSlot.remove(0);
+            }
+        }
+        // Update cached inventory
+        inventory = player.inventory.mainInventory.clone();
+    }
+
+    private boolean areInventoryItemsSame(ItemStack[] inventory, ItemStack[] inventory2) {
+        for (ItemStack item : inventory) {
+            boolean found = false;
+            for (ItemStack item2 : inventory2)
+                if ((item == null && item2 == null) || (item != null && item2 != null && item.isItemEqual(item2) &&
+                        ItemStack.areItemStackTagsEqual(item, item2)))
+                    found = true;
+            if (!found)
+                return false;
+        }
+        return true;
+    }
+
+    /***
+     * Check for a player death on remote servers.
+     * The player death event is not called.
+     * Let the death event handler evoke the reset if possible.
+     * @param player
+     */
+    private void checkPlayerDeath(EntityPlayer player) {
+        if (!player.isEntityAlive()) {
+            for (ItemStack slot : player.inventoryContainer.getInventory())
                 if (slot != null)
                     return;
             reset();

@@ -43,13 +43,8 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void pickupEvent(EntityItemPickupEvent event) { // FIXME not called when connected to remote server
+    public void pickupEvent(EntityItemPickupEvent event) {
         hotbarLogic.pickupEvent(event);
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void tickEvent(TickEvent.ClientTickEvent event) {
-        hotbarLogic.tickEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
