@@ -226,11 +226,11 @@ public class HotbarLogic {
         return id;
     }
 
-    private int getFirstEmptyStack(InventoryPlayer inventory) {
+    private int getFirstEmptyStack() {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = inventory.getStackInSlot(index);
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
                 if (stack == null)
                     return index;
             }
@@ -240,28 +240,29 @@ public class HotbarLogic {
 
     public void pickupEvent(EntityItemPickupEvent event) {
         // Check if compatible stack is in inventory
-        int slot = getFirstCompatibleStack(event.getItem().getEntityItem(), event.getEntityPlayer().inventory);
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
         if (slot >= 0) {
-            ItemStack stack = event.getEntityPlayer().inventory.getStackInSlot(slot);
+            ItemStack stack = player.inventory.getStackInSlot(slot);
             if (stack == null || stack.stackSize + event.getItem().getEntityItem().stackSize <= stack.getMaxStackSize())
                 return;
         }
         // Get the first empty stack
-        slot = event.getEntityPlayer().inventory.getFirstEmptyStack();
+        slot = player.inventory.getFirstEmptyStack();
         // No space in inventory
         if (slot < 0)
             return;
         // Does not need a move
-        if (slot == getFirstEmptyStack(event.getEntityPlayer().inventory))
+        if (slot == getFirstEmptyStack())
             return;
         this.pickupSlot.add(slot);
     }
 
-    private int getFirstCompatibleStack(ItemStack itemStack, InventoryPlayer inventory) {
+    private int getFirstCompatibleStack(ItemStack itemStack) {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = inventory.getStackInSlot(index);
+                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
                 if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
                         ItemStack.areItemStackTagsEqual(stack, itemStack) &&
                         stack.stackSize < stack.getMaxStackSize()) {
@@ -272,16 +273,17 @@ public class HotbarLogic {
         return -1;
     }
 
-    private void reorderPickedupItem(TickEvent.PlayerTickEvent event) {
+    private void reorderPickedupItem() {
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         // Nothing to move
         if (this.pickupSlot.isEmpty())
             return;
         // Wait for item to appear after an uncertain number of ticks
-        if (event.player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
+        if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
             return;
         // Move the picked up item to the correct slot
         int clickSlotFirst = this.pickupSlot.get(0) >= 9 ? this.pickupSlot.get(0) : 36 + this.pickupSlot.get(0);
-        int clickSlotSecond = getFirstEmptyStack(event.player.inventory) >= 9 ? getFirstEmptyStack(event.player.inventory) : 36 + getFirstEmptyStack(event.player.inventory);
+        int clickSlotSecond = getFirstEmptyStack() >= 9 ? getFirstEmptyStack() : 36 + getFirstEmptyStack();
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
         this.pickupSlot.remove(0);
     }
@@ -307,20 +309,20 @@ public class HotbarLogic {
     }
 
     public void playerTick(TickEvent.PlayerTickEvent event) {
-        reorderPickedupItem(event);
+        reorderPickedupItem();
         if (isWorldLocal)
             return;
-        checkPlayerDeath(event.player);
-        checkItemPickedUp(event.player);
+        checkPlayerDeath();
+        checkItemPickedUp();
     }
 
 	/**
      * Check if the player has picked uo an item.
      * Item pickup event is not called when connected to remote servers.
      * Let the pickup event handler handle this when it can.
-     * @param player
      */
-    private void checkItemPickedUp(EntityPlayer player) {
+    private void checkItemPickedUp() {
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         // Set the inventory
         if (inventory == null ||
                 // Ignore if inventory is open TODO check inventory movement better
@@ -392,9 +394,9 @@ public class HotbarLogic {
      * Check for a player death on remote servers.
      * The player death event is not called.
      * Let the death event handler evoke the reset if possible.
-     * @param player
      */
-    private void checkPlayerDeath(EntityPlayer player) {
+    private void checkPlayerDeath() {
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         if (!player.isEntityAlive()) {
             for (ItemStack slot : player.inventoryContainer.getInventory())
                 if (slot != null)
