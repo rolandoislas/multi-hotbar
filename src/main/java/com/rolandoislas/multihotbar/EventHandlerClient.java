@@ -10,7 +10,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
-import org.lwjgl.opengl.GL11;
 
 /**
  * Created by Rolando on 6/6/2016.
@@ -18,7 +17,6 @@ import org.lwjgl.opengl.GL11;
 public class EventHandlerClient {
     private HotBarRenderer hotbarRender;
     private HotbarLogic hotbarLogic;
-    private boolean renderPosted = true;
 
     public EventHandlerClient() {
         hotbarRender = new HotBarRenderer();
@@ -26,18 +24,11 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
-    public void handleHotbarRender(RenderGameOverlayEvent event) {
-        if (event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()) {
-            if (!HotbarLogic.showDefault) {
-                event.setCanceled(true);
-                hotbarRender.render();
-            }
-        }
+    public void renderGameOverlayEvent(RenderGameOverlayEvent event) {
+        hotbarRender.renderOverlayEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
     }
@@ -48,60 +39,26 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
-    public void shiftOverlayUp(RenderGameOverlayEvent.Pre event) {
-        // If events preceding the hotbar are cancelled pop the maxtrix before the hotbar in rendered
-        if (event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (!renderPosted)) {
-            GL11.glPopMatrix();
-            renderPosted = true;
-        }
-        // Apply the translation
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
-            if (!renderPosted)
-                GL11.glPopMatrix();
-            renderPosted = false;
-            GL11.glPushMatrix();
-            GL11.glTranslatef(0, -22, 0);
-        }
+    public void renderGameOverlayEventPre(RenderGameOverlayEvent.Pre event) {
+        hotbarRender.renderGameOverlayPre(event);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    @SuppressWarnings("unused")
-    public void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
-            renderPosted = true;
-            GL11.glPopMatrix();
-        }
-    }
-
-    private boolean isElementToShift(RenderGameOverlayEvent.ElementType type) {
-        return type == RenderGameOverlayEvent.ElementType.CHAT ||
-                type == RenderGameOverlayEvent.ElementType.HEALTH ||
-                type == RenderGameOverlayEvent.ElementType.AIR ||
-                type == RenderGameOverlayEvent.ElementType.ARMOR ||
-                type == RenderGameOverlayEvent.ElementType.EXPERIENCE ||
-                type == RenderGameOverlayEvent.ElementType.FOOD ||
-                type == RenderGameOverlayEvent.ElementType.HEALTHMOUNT ||
-                type == RenderGameOverlayEvent.ElementType.JUMPBAR;
+    public void renderOverlayEventPost(RenderGameOverlayEvent.Post event) {
+        hotbarRender.renderOverlayEventPost(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.getModID().equals(MultiHotbar.MODID)) {
-            Config.config.save();
-            Config.reload();
-        }
+        Config.configChanged(event);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("unused")
     public void keyPressed(InputEvent.KeyInputEvent event) {
         hotbarLogic.keyPressed(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         hotbarLogic.connectedToServer(event);
     }
@@ -112,13 +69,11 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void deathEvent(LivingDeathEvent event) {
         hotbarLogic.deathEvent(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    @SuppressWarnings("unused")
     public void playerTick(TickEvent.PlayerTickEvent event) {
         InventoryHelper.tick();
         hotbarLogic.playerTick(event);

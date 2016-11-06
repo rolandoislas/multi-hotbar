@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar;
 
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -38,5 +39,12 @@ public class Config {
 
     public static void setConfigFile(File configFile) {
         config = new Configuration(configFile);
+    }
+
+    public static void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.getModID().equals(MultiHotbar.MODID)) {
+            Config.config.save();
+            Config.reload();
+        }
     }
 }
