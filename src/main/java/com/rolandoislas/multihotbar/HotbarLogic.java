@@ -111,8 +111,11 @@ public class HotbarLogic {
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
-        // Change hotbars
-        if (slot > -1 && currentItem == slot && Config.numberOfHotbars > 1) {
+        // Change hotbar if modifier key is down and a number is presses
+        if (slot > -1 && KeyBindings.scrollModifier.isKeyDown() && slot < Config.numberOfHotbars)
+            moveSelectionToHotbar(slot);
+        // Change hotbars if pressed number matches currently selected slot
+        else if (slot > -1 && currentItem == slot && Config.numberOfHotbars > 1) {
             moveSelectionToNextHotbar();
         }
         // Select a slot
