@@ -11,7 +11,9 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 
 ext.branch = System.getenv('DRONE_BRANCH');
-version =  (ext.branch != null && ext.branch != "master") ? "dev-" + System.getenv('DRONE_BUILD_NUMBER') : "1.10.2-2.0.0"
+ext.build = System.getenv('DRONE_BUILD_NUMBER')
+version = "1.10.2-2.0"
+version =  (ext.branch != null && ext.branch != "master") ? version + "-dev-" + ext.build : version
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
