@@ -244,6 +244,8 @@ public class HotbarLogic {
     }
 
     public void pickupEvent(EntityItemPickupEvent event) {
+        if (showDefault || Config.relativeHotbarPickups)
+            return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
@@ -290,6 +292,9 @@ public class HotbarLogic {
     }
 
     private void reorderPickedupItem() {
+        if (showDefault || Config.relativeHotbarPickups)
+            return;
+        // Update item tick counters
         pickedUpAmountThisTick = 0;
         if (serverPickupIgnoreTicks > 0) {
             serverPickupIgnoreTicks--;

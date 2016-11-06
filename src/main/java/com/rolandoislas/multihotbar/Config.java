@@ -15,6 +15,7 @@ public class Config {
     public static int numberOfHotbars;
     public static Configuration config;
     public static boolean relativeHotbarKeys;
+    public static boolean relativeHotbarPickups;
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -30,6 +31,9 @@ public class Config {
         relativeHotbarKeys = config.getBoolean("Relative Hotbar Keys", Configuration.CATEGORY_GENERAL, false,
                 "If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently " +
                         "selected hotbar instead of the first");
+        relativeHotbarPickups = config.getBoolean("Relative Hotbar Pickups", Configuration.CATEGORY_GENERAL, false,
+                "When enabled slots are filled starting with the currently selected hotbar. " +
+                        "If disabled slots fill starting from the first hotbar.");
         config.save();
     }
 
