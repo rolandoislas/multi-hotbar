@@ -38,7 +38,9 @@ public class HotbarLogic {
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
     private boolean isWorldLocal;
     private ItemStack[] inventory;
-    private int serverPickupIgnoreTicks = 0;
+    private static int serverPickupIgnoreTicks = 0;
+    private int pickedUpAmountThisTick = 0;
+    private int waitForItemTicks = 0;
 
     public void mouseEvent(MouseEvent event) {
         if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
@@ -248,7 +250,7 @@ public class HotbarLogic {
                 return;
         }
         // Get the first empty stack
-        slot = player.inventory.getFirstEmptyStack();
+        slot = getFirstEmptyStackVanilla(pickedUpAmountThisTick);
         // No space in inventory
         if (slot < 0)
             return;
@@ -256,6 +258,17 @@ public class HotbarLogic {
         if (slot == getFirstEmptyStack())
             return;
         this.pickupSlot.add(slot);
+        addInventoryCheckDelay(5);
+        pickedUpAmountThisTick++;
+    }
+
+    private int getFirstEmptyStackVanilla(int skip) {
+        ItemStack[] mainInventory = Minecraft.getMinecraft().thePlayer.inventory.mainInventory;
+        for (int i = 0; i < mainInventory.length; ++i)
+            if (mainInventory[i] == null)
+                if (skip-- == 0)
+                    return i;
+        return -1;
     }
 
     private int getFirstCompatibleStack(ItemStack itemStack) {
@@ -274,11 +287,23 @@ public class HotbarLogic {
     }
 
     private void reorderPickedupItem() {
+        pickedUpAmountThisTick = 0;
+        if (serverPickupIgnoreTicks > 0) {
+            serverPickupIgnoreTicks--;
+            return;
+        }
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         // Nothing to move
         if (this.pickupSlot.isEmpty())
             return;
         // Wait for item to appear after an uncertain number of ticks
+        if (waitForItemTicks >= 40) {
+            this.pickupSlot.remove(0);
+            waitForItemTicks = 0;
+            return;
+        }
+        else
+            waitForItemTicks++;
         if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
             return;
         // Move the picked up item to the correct slot
@@ -329,8 +354,6 @@ public class HotbarLogic {
                 Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
                 serverPickupIgnoreTicks > 0) {
             inventory = player.inventory.mainInventory.clone();
-            if (serverPickupIgnoreTicks > 0)
-                serverPickupIgnoreTicks--;
         }
         // Find the changed item
         ArrayList<EntityItem> changed = new ArrayList<EntityItem>();
@@ -353,25 +376,31 @@ public class HotbarLogic {
             int size = changed.size();
             if (size > 1 && areInventoryItemsSame(player.inventory.mainInventory, inventory))
                 return;
+            // Save inventory copy
+            ItemStack[] inventoryUntouched = new ItemStack[player.inventory.mainInventory.length];
+            for (int slot = 0; slot < player.inventory.mainInventory.length; slot++)
+                inventoryUntouched[slot] = player.inventory.mainInventory[slot] == null ? null :
+                        player.inventory.mainInventory[slot].copy();
+            // Call the event handler
             for (int i = 0; i < size; i++) {
                 int slot = changedSlot.get(0);
                 // Remove item from inventory to emulate the inventory state that the event handler expects
-                if (inventory[changedSlot.get(0)] == null)
+                if (inventory[slot] == null)
                     player.inventory.mainInventory[slot].stackSize = 0;
                 else
                     player.inventory.mainInventory[slot].stackSize -= inventory[slot].stackSize;
                 if (player.inventory.mainInventory[slot].stackSize == 0)
-                    player.inventory.removeStackFromSlot(changedSlot.get(0));
+                    player.inventory.removeStackFromSlot(slot);
                 // Create the pickup event
                 pickupEvent(new EntityItemPickupEvent(player, changed.get(0)));
-                serverPickupIgnoreTicks = 5;
-                // Add item back to inventory to emulate the event having already taking place and the tick handler will
-                // move it
-                player.inventory.setInventorySlotContents(slot, changed.get(0).getEntityItem().copy());
                 // Remove from array lists
                 changed.remove(0);
                 changedSlot.remove(0);
             }
+            // Add item back to inventory to emulate the event having already taking place and the tick handler will
+            // move it
+            for (int slot = 0; slot < inventoryUntouched.length; slot++)
+                player.inventory.mainInventory[slot] = inventoryUntouched[slot];
         }
         // Update cached inventory
         inventory = player.inventory.mainInventory.clone();
@@ -403,5 +432,9 @@ public class HotbarLogic {
                     return;
             reset();
         }
+    }
+
+    public static void addInventoryCheckDelay(int delay) {
+        serverPickupIgnoreTicks += delay;
     }
 }

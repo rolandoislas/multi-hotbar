@@ -73,5 +73,6 @@ public class InventoryHelper {
         Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
         Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
         Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+        HotbarLogic.addInventoryCheckDelay(1);
     }
 }
