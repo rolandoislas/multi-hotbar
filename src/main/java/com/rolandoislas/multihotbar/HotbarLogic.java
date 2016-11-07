@@ -23,8 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -38,12 +37,17 @@ public class HotbarLogic {
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
     private boolean isWorldLocal;
     private ItemStack[] inventory;
-    private static int serverPickupIgnoreTicks = 0;
+    private static int inventoryReorderDelayTicks = 0;
     private int pickedUpAmountThisTick = 0;
     private int waitForItemTicks = 0;
+    private static HashMap<Integer, Integer> ignoreSlots = new HashMap<Integer, Integer>();
 
+    /**
+     * Handles mouse scroll for hotbar
+     * @param event mouse event
+     */
     public void mouseEvent(MouseEvent event) {
-        if (InventoryHelper.waitTicks > 0 || HotbarLogic.showDefault)
+        if (InventoryHelper.waitForInventoryTweaks() || HotbarLogic.showDefault)
             return;
         // Scrolled
         if (event.getDwheel() != 0) {
@@ -76,10 +80,17 @@ public class HotbarLogic {
         }
     }
 
+    /**
+     * Go to previous hotbar keeping currently selected item. Loops to last hotbar.
+     */
     private void moveSelectionToPreviousHotbar() {
         moveSelection(false);
     }
 
+    /**
+     * Move to adjacent hotbar. Loops to first or last hotbar.
+     * @param forward move forward instead of backward
+     */
     private void moveSelection(boolean forward) {
         if (Config.numberOfHotbars == 1)
             return;
@@ -94,12 +105,19 @@ public class HotbarLogic {
         hotbarOrder[hotbarIndex] = orderFirst;
     }
 
+    /**
+     * Go to next hotbar. Loops to first hotbar.
+     */
     private void moveSelectionToNextHotbar() {
         moveSelection(true);
     }
 
+    /**
+     * Handles button events
+     * @param event Key input
+     */
     public void keyPressed(InputEvent.KeyInputEvent event) {
-        if (InventoryHelper.waitTicks > 0)
+        if (InventoryHelper.waitForInventoryTweaks())
             return;
         // Check toggle key
         if (KeyBindings.showDefaultHotbar.isPressed()) {
@@ -128,15 +146,26 @@ public class HotbarLogic {
             resetTooltipTicks();
     }
 
+    /**
+     * Set tooltip ticks to default show time
+     */
     private void resetTooltipTicks() {
         HotBarRenderer.tooltipTicks = 128;
     }
 
+    /**
+     * Move to a specific hotbar.
+     * @param index hotbar index
+     */
     private void moveSelectionToHotbar(int index) {
         while (hotbarIndex != index)
             moveSelectionToNextHotbar();
     }
 
+    /**
+     * Reset hotbar.
+     * Updates index, order, current item, and toggle.
+     */
     public static void reset() {
         showDefault = false;
         updateTooltips();
@@ -148,6 +177,9 @@ public class HotbarLogic {
         } catch (Exception ignore) {}
     }
 
+    /**
+     * Save the hotbar state for the current world to json.
+     */
     private void save() {
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
@@ -181,6 +213,9 @@ public class HotbarLogic {
         } catch (IOException ignore) {}
     }
 
+    /**
+     * Load the hotbar state for current world from json. Defaults set if entry not found.
+     */
     private void load() {
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
@@ -204,10 +239,19 @@ public class HotbarLogic {
         }
     }
 
+    /**
+     * Updates minecraft game config to show or hide vanilla item tooltips. Based on if the vanilla hotbar is shown.
+     */
     private static void updateTooltips() {
         Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
     }
 
+    /**
+     * Get the unique world ID.
+     * Local server uses seed, world name, and directory path.
+     * IP address if remote server.
+     * @return MD5 of world ID
+     */
     private String getWorldId() {
         // Construct unique id or use world address if remote
         String id;
@@ -231,6 +275,10 @@ public class HotbarLogic {
         return id;
     }
 
+    /**
+     * Get the first empty stack following the long hotbar order.
+     * @return
+     */
     private int getFirstEmptyStack() {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
@@ -243,6 +291,10 @@ public class HotbarLogic {
         return -1;
     }
 
+    /**
+     * Determines if the picked up item needs to be reordered. If it does, it is put into the reorder queue.
+     * @param event pickup event
+     */
     public void pickupEvent(EntityItemPickupEvent event) {
         if (showDefault || Config.relativeHotbarPickups)
             return;
@@ -263,10 +315,15 @@ public class HotbarLogic {
         if (slot == getFirstEmptyStack())
             return;
         this.pickupSlot.add(slot);
-        addInventoryCheckDelay(5);
+        addInventoryReorderDelay(5);
         pickedUpAmountThisTick++;
     }
 
+    /**
+     * Get the first stack with vanilla ordering.
+     * @param skip Empty slots to skip
+     * @return slot index (0-35)
+     */
     private int getFirstEmptyStackVanilla(int skip) {
         ItemStack[] mainInventory = Minecraft.getMinecraft().thePlayer.inventory.mainInventory;
         for (int i = 0; i < mainInventory.length; ++i)
@@ -276,6 +333,11 @@ public class HotbarLogic {
         return -1;
     }
 
+    /**
+     * Finds first non full stack of the same item type
+     * @param itemStack item type to find
+     * @return slot index (0-35)
+     */
     private int getFirstCompatibleStack(ItemStack itemStack) {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
@@ -291,13 +353,18 @@ public class HotbarLogic {
         return -1;
     }
 
+    /**
+     * Try to reoder the slots in the queue.
+     * Will wait a few ticks for item to appear in inventory.
+     * After too many ticks top item in queue is removed.
+     */
     private void reorderPickedupItem() {
         if (showDefault || Config.relativeHotbarPickups)
             return;
         // Update item tick counters
         pickedUpAmountThisTick = 0;
-        if (serverPickupIgnoreTicks > 0) {
-            serverPickupIgnoreTicks--;
+        if (inventoryReorderDelayTicks > 0) {
+            inventoryReorderDelayTicks--;
             return;
         }
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
@@ -315,22 +382,35 @@ public class HotbarLogic {
         if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
             return;
         // Move the picked up item to the correct slot
-        int clickSlotFirst = this.pickupSlot.get(0) >= 9 ? this.pickupSlot.get(0) : 36 + this.pickupSlot.get(0);
-        int clickSlotSecond = getFirstEmptyStack() >= 9 ? getFirstEmptyStack() : 36 + getFirstEmptyStack();
+        int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
+        int clickSlotSecond = InventoryHelper.mainInventoryToFullInventory(getFirstEmptyStack());
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
         this.pickupSlot.remove(0);
     }
 
+    /**
+     * Sets world address and determines of world is local.
+     * Calls load()
+     * @param event client event
+     */
     void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         worldAddress = event.getManager().getRemoteAddress().toString();
         isWorldLocal = event.isLocal();
         load();
     }
 
+    /**
+     * Calls save()
+     * @param event client event
+     */
     void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         save();
     }
 
+    /**
+     * Checks if the player has died and resets if keepinventory game rule is disabled.
+     * @param event death event
+     */
     void deathEvent(LivingDeathEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
@@ -341,15 +421,36 @@ public class HotbarLogic {
         }
     }
 
+    /**
+     * Handles item reorder.
+     * Handles deadh and pickup event checks when connected to remote server.
+     * @param event
+     */
     public void playerTick(TickEvent.PlayerTickEvent event) {
         reorderPickedupItem();
+        updateIgnoredSlotTicks();
         if (isWorldLocal)
             return;
         checkPlayerDeath();
         checkItemPickedUp();
     }
 
-	/**
+    /**
+     * Decrements the ignored slots tick time every tick. Removes ignored slots when there time has expired.
+     */
+    private void updateIgnoredSlotTicks() {
+        ArrayList<Integer> expiredSlots = new ArrayList<Integer>();
+        for (Map.Entry<Integer, Integer> slot : ignoreSlots.entrySet()) {
+            if (slot.getValue() == 0)
+                expiredSlots.add(slot.getKey());
+            else
+                slot.setValue(slot.getValue() - 1);
+        }
+        for (int expiredSlot : expiredSlots)
+            ignoreSlots.remove(expiredSlot);
+    }
+
+    /**
      * Check if the player has picked uo an item.
      * Item pickup event is not called when connected to remote servers.
      * Let the pickup event handler handle this when it can.
@@ -359,8 +460,7 @@ public class HotbarLogic {
         // Set the inventory
         if (inventory == null ||
                 // Ignore if inventory is open TODO check inventory movement better
-                Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
-                serverPickupIgnoreTicks > 0) {
+                Minecraft.getMinecraft().currentScreen instanceof GuiInventory) {
             inventory = player.inventory.mainInventory.clone();
         }
         // Find the changed item
@@ -368,12 +468,14 @@ public class HotbarLogic {
         ArrayList<Integer> changedSlot = new ArrayList<Integer>();
         for (int i = 0; i < player.inventory.mainInventory.length; i++) {
             if (
+                    // Check if slot should be ignored
+                    (!ignoreSlots.containsKey(i)) && (
                     // Check if there is an item in a slot that was empty
                     (player.inventory.mainInventory[i] != null && inventory[i] == null) ||
                     // Make sure the slots are equal
                     player.inventory.mainInventory[i] != null &&
                     !(player.inventory.mainInventory[i].isItemEqual(inventory[i]) &&
-                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory[i], inventory[i]))) {
+                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory[i], inventory[i])))) {
                 ItemStack changedStack = player.inventory.mainInventory[i].copy();
                 changed.add(new EntityItem(player.worldObj, player.posX, player.posY, player.posY, changedStack));
                 changedSlot.add(i);
@@ -414,6 +516,12 @@ public class HotbarLogic {
         inventory = player.inventory.mainInventory.clone();
     }
 
+    /**
+     * Compares two inventories, ignoring order, to see if the items are the same.
+     * @param inventory first inventory
+     * @param inventory2 second inventory
+     * @return do the have the same items
+     */
     private boolean areInventoryItemsSame(ItemStack[] inventory, ItemStack[] inventory2) {
         for (ItemStack item : inventory) {
             boolean found = false;
@@ -442,7 +550,19 @@ public class HotbarLogic {
         }
     }
 
-    public static void addInventoryCheckDelay(int delay) {
-        serverPickupIgnoreTicks += delay;
+    /**
+     * Add a tick delay to the item reordered.
+     * @param delay ticks
+     */
+    private static void addInventoryReorderDelay(int delay) {
+        inventoryReorderDelayTicks += delay;
+    }
+
+    /**
+     * Ignore a slot for a few ticks
+     * @param slot slot index (0-35)
+     */
+    static void ignoreSlot(int slot) {
+        ignoreSlots.put(slot, 5);
     }
 }
