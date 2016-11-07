@@ -11,7 +11,7 @@ Multi-Hotbar is a Minecraft Forge mod that extends Minecraft's hotbar past nine 
 
 The mod is avaliable from the following locations:
 - [CurseForge]
-- [Dev Builds] (Not cached - only available for latest build)
+- [Dev Builds] Not cached - only available for latest build
 
 ## Developing
 
