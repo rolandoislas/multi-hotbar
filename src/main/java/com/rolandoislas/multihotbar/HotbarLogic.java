@@ -388,12 +388,8 @@ public class HotbarLogic {
         int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
         int clickSlotSecond = InventoryHelper.mainInventoryToFullInventory(getFirstEmptyStack());
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
-        try {
+        if (this.pickupSlot.size() > 0)
             this.pickupSlot.remove(0);
-        }
-        catch (ArrayIndexOutOfBoundsException exception) {
-            exception.printStackTrace();
-        }
     }
 
     /**
