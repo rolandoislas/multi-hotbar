@@ -23,7 +23,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -385,7 +388,12 @@ public class HotbarLogic {
         int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
         int clickSlotSecond = InventoryHelper.mainInventoryToFullInventory(getFirstEmptyStack());
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
-        this.pickupSlot.remove(0);
+        try {
+            this.pickupSlot.remove(0);
+        }
+        catch (ArrayIndexOutOfBoundsException exception) {
+            exception.printStackTrace();
+        }
     }
 
     /**
