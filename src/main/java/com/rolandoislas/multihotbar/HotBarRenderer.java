@@ -58,8 +58,8 @@ public class HotBarRenderer extends Gui {
         if (tooltipTicks > 0)
             tooltipTicks--;
         int[] coords = getHotbarCoords(Config.numberOfHotbars >= 3 ? 2 : 0);
-        ItemStack item = minecraft.thePlayer.inventory.getCurrentItem();
-        if (item == null || tooltipTicks == 0)
+        ItemStack item = minecraft.player.inventory.getCurrentItem();
+        if (item.isEmpty() || tooltipTicks == 0)
             return;
         ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int x = scaledResolution.getScaledWidth() / 2 -
@@ -86,7 +86,7 @@ public class HotBarRenderer extends Gui {
         if (InventoryHelper.waitForInventoryTweaks())
             return;
         // Draw selection indicator
-        int slot = minecraft.thePlayer.inventory.currentItem;
+        int slot = minecraft.player.inventory.currentItem;
         int index = HotbarLogic.hotbarIndex;
         int[] coords = getHotbarCoords(index);
         int x = coords[0];
@@ -164,11 +164,11 @@ public class HotBarRenderer extends Gui {
         GlStateManager.enableRescaleNormal();
         RenderHelper.enableGUIStandardItemLighting();
         for (int i = slotIndex * 9; i < slotIndex * 9 + 9; i++) {
-            ItemStack item = minecraft.thePlayer.inventory.getStackInSlot(i);
-            if (item != null) {
+            ItemStack item = minecraft.player.inventory.getStackInSlot(i);
+            if (!item.isEmpty()) {
                 int itemX = getXForSlot(hotbarIndex, i - slotIndex * 9);
                 int itemY = getYForSlot(hotbarIndex);
-                float pickupAnimation = item.animationsToGo - 1;
+                float pickupAnimation = item.getAnimationsToGo() - 1;
                 if (pickupAnimation > 0.0F) {
                     GlStateManager.pushMatrix();
                     float scale = 1 + pickupAnimation / 5;

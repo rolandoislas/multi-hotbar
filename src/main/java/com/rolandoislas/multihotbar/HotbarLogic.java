@@ -9,6 +9,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -23,10 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -39,7 +37,7 @@ public class HotbarLogic {
     private String worldAddress;
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
     private boolean isWorldLocal;
-    private ItemStack[] inventory;
+    private List<ItemStack> inventory;
     private static int inventoryReorderDelayTicks = 0;
     private int pickedUpAmountThisTick = 0;
     private int waitForItemTicks = 0;
@@ -55,7 +53,7 @@ public class HotbarLogic {
         // Scrolled
         if (event.getDwheel() != 0) {
             // Handle hotbar selector scroll
-            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+            EntityPlayerSP player = Minecraft.getMinecraft().player;
             // Scrolled right
             if (event.getDwheel() < 0) {
                 if (KeyBindings.scrollModifier.isKeyDown())
@@ -131,7 +129,7 @@ public class HotbarLogic {
             return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
-        int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
+        int currentItem = Minecraft.getMinecraft().player.inventory.currentItem;
         // Change hotbar if modifier key is down and a number is presses
         if (slot > -1 && KeyBindings.scrollModifier.isKeyDown() && slot < Config.numberOfHotbars)
             moveSelectionToHotbar(slot);
@@ -141,7 +139,7 @@ public class HotbarLogic {
         }
         // Select a slot
         else if (slot > - 1) {
-            Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot;
+            Minecraft.getMinecraft().player.inventory.currentItem = slot;
             if (!Config.relativeHotbarKeys)
                 moveSelectionToHotbar(0);
         }
@@ -176,7 +174,7 @@ public class HotbarLogic {
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
             hotbarOrder[i] = i;
         try {
-            Minecraft.getMinecraft().thePlayer.inventory.currentItem = 0;
+            Minecraft.getMinecraft().player.inventory.currentItem = 0;
         } catch (Exception ignore) {}
     }
 
@@ -286,8 +284,8 @@ public class HotbarLogic {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
-                if (stack == null)
+                ItemStack stack = Minecraft.getMinecraft().player.inventory.getStackInSlot(index);
+                if (stack.isEmpty())
                     return index;
             }
         }
@@ -302,11 +300,11 @@ public class HotbarLogic {
         if (showDefault || Config.relativeHotbarPickups)
             return;
         // Check if compatible stack is in inventory
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
         if (slot >= 0) {
             ItemStack stack = player.inventory.getStackInSlot(slot);
-            if (stack == null || stack.stackSize + event.getItem().getEntityItem().stackSize <= stack.getMaxStackSize())
+            if (stack.isEmpty() || stack.getCount() + event.getItem().getEntityItem().getCount() <= stack.getMaxStackSize())
                 return;
         }
         // Get the first empty stack
@@ -328,9 +326,9 @@ public class HotbarLogic {
      * @return slot index (0-35)
      */
     private int getFirstEmptyStackVanilla(int skip) {
-        ItemStack[] mainInventory = Minecraft.getMinecraft().thePlayer.inventory.mainInventory;
-        for (int i = 0; i < mainInventory.length; ++i)
-            if (mainInventory[i] == null)
+        NonNullList<ItemStack> mainInventory = Minecraft.getMinecraft().player.inventory.mainInventory;
+        for (int i = 0; i < mainInventory.size(); ++i)
+            if (mainInventory.get(i).isEmpty())
                 if (skip-- == 0)
                     return i;
         return -1;
@@ -345,10 +343,10 @@ public class HotbarLogic {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
                 int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
-                if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
+                ItemStack stack = Minecraft.getMinecraft().player.inventory.getStackInSlot(index);
+                if (!stack.isEmpty() && stack.isStackable() && stack.isItemEqual(itemStack) &&
                         ItemStack.areItemStackTagsEqual(stack, itemStack) &&
-                        stack.stackSize < stack.getMaxStackSize()) {
+                        stack.getCount() < stack.getMaxStackSize()) {
                     return index;
                 }
             }
@@ -370,7 +368,7 @@ public class HotbarLogic {
             inventoryReorderDelayTicks--;
             return;
         }
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         // Nothing to move
         if (this.pickupSlot.isEmpty())
             return;
@@ -382,7 +380,7 @@ public class HotbarLogic {
         }
         else
             waitForItemTicks++;
-        if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
+        if (player.inventory.getStackInSlot(pickupSlot.get(0)).isEmpty())
             return;
         // Move the picked up item to the correct slot
         int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
@@ -418,9 +416,9 @@ public class HotbarLogic {
     void deathEvent(LivingDeathEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
-            if (!player.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()))
+            if (!player.getUniqueID().equals(Minecraft.getMinecraft().player.getUniqueID()))
                 return;
-            if (!player.worldObj.getGameRules().getBoolean("keepInventory"))
+            if (!player.world.getGameRules().getBoolean("keepInventory"))
                 HotbarLogic.reset();
         }
     }
@@ -460,28 +458,28 @@ public class HotbarLogic {
      * Let the pickup event handler handle this when it can.
      */
     private void checkItemPickedUp() {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         // Set the inventory
         if (inventory == null ||
                 // Ignore if inventory is open TODO check inventory movement better
                 Minecraft.getMinecraft().currentScreen instanceof GuiInventory) {
-            inventory = player.inventory.mainInventory.clone();
+            inventory = new ArrayList<ItemStack>(player.inventory.mainInventory);
         }
         // Find the changed item
         ArrayList<EntityItem> changed = new ArrayList<EntityItem>();
         ArrayList<Integer> changedSlot = new ArrayList<Integer>();
-        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
+        for (int i = 0; i < player.inventory.mainInventory.size(); i++) {
             if (
                     // Check if slot should be ignored
                     (!ignoreSlots.containsKey(i)) && (
                     // Check if there is an item in a slot that was empty
-                    (player.inventory.mainInventory[i] != null && inventory[i] == null) ||
+                    (!player.inventory.mainInventory.get(i).isEmpty() && inventory.get(i).isEmpty()) ||
                     // Make sure the slots are equal
-                    player.inventory.mainInventory[i] != null &&
-                    !(player.inventory.mainInventory[i].isItemEqual(inventory[i]) &&
-                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory[i], inventory[i])))) {
-                ItemStack changedStack = player.inventory.mainInventory[i].copy();
-                changed.add(new EntityItem(player.worldObj, player.posX, player.posY, player.posY, changedStack));
+                    !player.inventory.mainInventory.get(i).isEmpty() &&
+                    !(player.inventory.mainInventory.get(i).isItemEqual(inventory.get(i)) &&
+                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory.get(i), inventory.get(i))))) {
+                ItemStack changedStack = player.inventory.mainInventory.get(i).copy();
+                changed.add(new EntityItem(player.world, player.posX, player.posY, player.posY, changedStack));
                 changedSlot.add(i);
             }
         }
@@ -491,19 +489,19 @@ public class HotbarLogic {
             if (size > 1 && areInventoryItemsSame(player.inventory.mainInventory, inventory))
                 return;
             // Save inventory copy
-            ItemStack[] inventoryUntouched = new ItemStack[player.inventory.mainInventory.length];
-            for (int slot = 0; slot < player.inventory.mainInventory.length; slot++)
-                inventoryUntouched[slot] = player.inventory.mainInventory[slot] == null ? null :
-                        player.inventory.mainInventory[slot].copy();
+            ItemStack[] inventoryUntouched = new ItemStack[player.inventory.mainInventory.size()];
+            for (int slot = 0; slot < player.inventory.mainInventory.size(); slot++)
+                inventoryUntouched[slot] = player.inventory.mainInventory.get(slot).copy();
             // Call the event handler
             for (int i = 0; i < size; i++) {
                 int slot = changedSlot.get(0);
                 // Remove item from inventory to emulate the inventory state that the event handler expects
-                if (inventory[slot] == null)
-                    player.inventory.mainInventory[slot].stackSize = 0;
+                if (inventory.get(slot).isEmpty())
+                    player.inventory.mainInventory.get(slot).setCount(0);
                 else
-                    player.inventory.mainInventory[slot].stackSize -= inventory[slot].stackSize;
-                if (player.inventory.mainInventory[slot].stackSize == 0)
+                    player.inventory.mainInventory.get(slot).setCount(
+                            player.inventory.mainInventory.get(slot).getCount() - inventory.get(slot).getCount());;
+                if (player.inventory.mainInventory.get(slot).getCount() == 0)
                     player.inventory.removeStackFromSlot(slot);
                 // Create the pickup event
                 pickupEvent(new EntityItemPickupEvent(player, changed.get(0)));
@@ -514,10 +512,10 @@ public class HotbarLogic {
             // Add item back to inventory to emulate the event having already taking place and the tick handler will
             // move it
             for (int slot = 0; slot < inventoryUntouched.length; slot++)
-                player.inventory.mainInventory[slot] = inventoryUntouched[slot];
+                player.inventory.mainInventory.set(slot, inventoryUntouched[slot]);
         }
         // Update cached inventory
-        inventory = player.inventory.mainInventory.clone();
+        inventory = new ArrayList<ItemStack>(player.inventory.mainInventory);
     }
 
     /**
@@ -526,11 +524,11 @@ public class HotbarLogic {
      * @param inventory2 second inventory
      * @return do the have the same items
      */
-    private boolean areInventoryItemsSame(ItemStack[] inventory, ItemStack[] inventory2) {
+    private boolean areInventoryItemsSame(NonNullList<ItemStack> inventory, List<ItemStack> inventory2) {
         for (ItemStack item : inventory) {
             boolean found = false;
             for (ItemStack item2 : inventory2)
-                if ((item == null && item2 == null) || (item != null && item2 != null && item.isItemEqual(item2) &&
+                if ((item.isEmpty() && item2.isEmpty()) || (!item.isEmpty() && !item2.isEmpty() && item.isItemEqual(item2) &&
                         ItemStack.areItemStackTagsEqual(item, item2)))
                     found = true;
             if (!found)
@@ -545,7 +543,7 @@ public class HotbarLogic {
      * Let the death event handler evoke the reset if possible.
      */
     private void checkPlayerDeath() {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         if (!player.isEntityAlive()) {
             for (ItemStack slot : player.inventoryContainer.getInventory())
                 if (slot != null)

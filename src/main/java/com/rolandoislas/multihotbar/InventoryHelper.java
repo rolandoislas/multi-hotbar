@@ -21,7 +21,7 @@ public class InventoryHelper {
      * @param secondIndex index of second hotbar
      */
     public static void swapHotbars(int firstIndex, int secondIndex) {
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayerSP player = Minecraft.getMinecraft().player;
         waitTicks = 1000000; // One MILLION ticks!
         if (lastItem < 0)
             lastItem = player.inventory.currentItem;
@@ -33,11 +33,11 @@ public class InventoryHelper {
         for (int i = 0; i < InventoryPlayer.getHotbarSize(); i++) {
             ItemStack firstItem = player.inventory.getStackInSlot(firstSlotIndex + i);
             ItemStack secondItem = player.inventory.getStackInSlot(secondSlotIndex + i);
-            if (firstItem != null || secondItem != null)
+            if (!firstItem.isEmpty() || !secondItem.isEmpty())
                 swapSlot(firstSlotindex936 + i, secondSlotindex936 + i);
             if (Loader.isModLoaded("inventorytweaks")) {
                 // Set currentItem to a mull slot or two item slots
-                if ((!slotFound) && (firstItem == null || secondItem != null)) {
+                if ((!slotFound) && (!firstItem.isEmpty() || !secondItem.isEmpty())) {
                     player.inventory.currentItem = i;
                     slotFound = true;
                 }
@@ -80,7 +80,7 @@ public class InventoryHelper {
             return;
         }
         if (lastItem > -1) {
-            Minecraft.getMinecraft().thePlayer.inventory.currentItem = lastItem;
+            Minecraft.getMinecraft().player.inventory.currentItem = lastItem;
             lastItem = -1;
         }
     }
@@ -91,7 +91,7 @@ public class InventoryHelper {
      * @param secondSlot Slot index (9-44)
      */
     static void swapSlot(int firstSlot, int secondSlot) {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         int window = player.inventoryContainer.windowId;
         Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
         Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
