@@ -15,15 +15,15 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.branch = System.getenv('DRONE_BRANCH');
 ext.build = System.getenv('DRONE_BUILD_NUMBER')
-version = "1.10.2-2.0"
+version = "1.10.2-2.1"
 version =  (ext.branch != null && ext.branch != "master") ? version + "-dev-" + ext.build : version
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
 minecraft {
-    version = "1.10.2-12.18.2.2099"
+    version = "1.10.2-12.18.3.2185"
     runDir = "run"
-    mappings = "snapshot_20160518"
+    mappings = "snapshot_20161111"
 }
 
 curseforge {
