@@ -92,6 +92,16 @@ public class InventoryHelper {
      */
     static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().player;
+        // Check if current item should be changed to avoid inventory tweaks autoreplace
+        if (lastItem < 0 && Loader.isModLoaded("inventorytweaks")) {
+            if (fullInventoryToMainInventory(firstSlot) == player.inventory.currentItem ||
+                    fullInventoryToMainInventory(secondSlot) == player.inventory.currentItem) {
+                lastItem = player.inventory.currentItem;
+                player.inventory.currentItem = lastItem + 1 <= 8 ? lastItem + 1 : 0;
+                waitTicks = 5;
+            }
+        }
+        // Move items
         int window = player.inventoryContainer.windowId;
         try {
             Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
