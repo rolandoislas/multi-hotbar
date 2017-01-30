@@ -93,9 +93,11 @@ public class InventoryHelper {
     static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().player;
         int window = player.inventoryContainer.windowId;
-        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
-        Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+        try {
+            Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+            Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
+            Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+        } catch (IndexOutOfBoundsException ignore) {}
         HotbarLogic.ignoreSlot(fullInventoryToMainInventory(firstSlot));
         HotbarLogic.ignoreSlot(fullInventoryToMainInventory(secondSlot));
     }
