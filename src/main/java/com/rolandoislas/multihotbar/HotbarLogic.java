@@ -303,6 +303,8 @@ public class HotbarLogic {
             return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player == null)
+            return;
         int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
         if (slot >= 0) {
             ItemStack stack = player.inventory.getStackInSlot(slot);
