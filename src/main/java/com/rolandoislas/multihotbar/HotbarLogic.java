@@ -25,8 +25,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -43,7 +43,7 @@ public class HotbarLogic {
     private static int inventoryReorderDelayTicks = 0;
     private int pickedUpAmountThisTick = 0;
     private int waitForItemTicks = 0;
-    private static HashMap<Integer, Integer> ignoreSlots = new HashMap<Integer, Integer>();
+    private static ConcurrentHashMap<Integer, Integer> ignoreSlots = new ConcurrentHashMap<Integer, Integer>();
 
     /**
      * Handles mouse scroll for hotbar
@@ -445,15 +445,12 @@ public class HotbarLogic {
      * Decrements the ignored slots tick time every tick. Removes ignored slots when there time has expired.
      */
     private void updateIgnoredSlotTicks() {
-        ArrayList<Integer> expiredSlots = new ArrayList<Integer>();
         for (Map.Entry<Integer, Integer> slot : ignoreSlots.entrySet()) {
             if (slot.getValue() == 0)
-                expiredSlots.add(slot.getKey());
+                ignoreSlots.remove(slot.getKey());
             else
                 slot.setValue(slot.getValue() - 1);
         }
-        for (int expiredSlot : expiredSlots)
-            ignoreSlots.remove(expiredSlot);
     }
 
     /**
