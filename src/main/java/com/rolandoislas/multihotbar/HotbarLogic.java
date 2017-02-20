@@ -218,7 +218,6 @@ public class HotbarLogic {
                 for (WorldJson worldJson : worldJsonArray) {
                     if (worldJson.getId().equals(getWorldId())) {
                         found = true;
-                        reset(false);
                         worldJson.setIndex(hotbarIndex);
                         worldJson.setOrder(hotbarOrder);
                         break;
