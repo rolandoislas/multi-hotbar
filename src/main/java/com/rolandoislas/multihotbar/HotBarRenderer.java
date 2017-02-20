@@ -33,7 +33,7 @@ public class HotBarRenderer extends Gui {
     public void render(RenderGameOverlayEvent event) {
         // Check if hotbar should render
         if (!(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable() &&
-                !HotbarLogic.showDefault))
+                !HotbarLogic.shouldShowDefault()))
             return;
         event.setCanceled(true);
         // Render
@@ -197,7 +197,7 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -211,7 +211,7 @@ public class HotBarRenderer extends Gui {
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
             renderPosted = true;
             GL11.glPopMatrix();
         }

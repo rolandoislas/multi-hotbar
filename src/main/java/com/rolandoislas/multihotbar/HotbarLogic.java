@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HotbarLogic {
     public static int hotbarIndex = 0;
     public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
-    public static boolean showDefault = false;
+    private static boolean showDefault = false;
     private static WorldJson[] worldJsonArray;
     private String worldAddress;
     private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
@@ -46,11 +46,27 @@ public class HotbarLogic {
     private static ConcurrentHashMap<Integer, Integer> ignoreSlots = new ConcurrentHashMap<Integer, Integer>();
 
     /**
+     * Checks if the custom hotbar should be shown
+     * @return boolean
+     */
+    static boolean shouldShowDefault() {
+        return showDefault;
+    }
+
+    /**
+     * Set the state of the hotbar.
+     * @param showDefault should the normal hotbar be shown
+     */
+    private static void setShowDefault(boolean showDefault) {
+        HotbarLogic.showDefault = showDefault;
+    }
+
+    /**
      * Handles mouse scroll for hotbar
      * @param event mouse event
      */
     public void mouseEvent(MouseEvent event) {
-        if (InventoryHelper.waitForInventoryTweaks() || HotbarLogic.showDefault)
+        if (InventoryHelper.waitForInventoryTweaks() || HotbarLogic.shouldShowDefault())
             return;
         // Scrolled
         if (event.dwheel != 0) {
@@ -124,10 +140,10 @@ public class HotbarLogic {
             return;
         // Check toggle key
         if (KeyBindings.showDefaultHotbar.isPressed()) {
-            showDefault = !showDefault;
-            Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
+            setShowDefault(!shouldShowDefault());
+            Minecraft.getMinecraft().gameSettings.heldItemTooltips = shouldShowDefault();
         }
-        if (HotbarLogic.showDefault)
+        if (HotbarLogic.shouldShowDefault())
             return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
@@ -170,7 +186,7 @@ public class HotbarLogic {
      * Updates index, order, current item, and toggle.
      */
     public static void reset() {
-        showDefault = false;
+        setShowDefault(false);
         updateTooltips();
         hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
@@ -246,7 +262,7 @@ public class HotbarLogic {
      * Updates minecraft game config to show or hide vanilla item tooltips. Based on if the vanilla hotbar is shown.
      */
     private static void updateTooltips() {
-        Minecraft.getMinecraft().gameSettings.heldItemTooltips = showDefault;
+        Minecraft.getMinecraft().gameSettings.heldItemTooltips = shouldShowDefault();
     }
 
     /**
@@ -299,7 +315,7 @@ public class HotbarLogic {
      * @param event pickup event
      */
     public void pickupEvent(EntityItemPickupEvent event) {
-        if (showDefault || Config.relativeHotbarPickups)
+        if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
@@ -364,7 +380,7 @@ public class HotbarLogic {
      * After too many ticks top item in queue is removed.
      */
     private void reorderPickedupItem() {
-        if (showDefault || Config.relativeHotbarPickups)
+        if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
         // Update item tick counters
         pickedUpAmountThisTick = 0;
