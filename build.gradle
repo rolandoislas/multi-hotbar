@@ -15,7 +15,7 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
 ext.tag = System.getenv("TRAVIS_TAG")
-version = "1.11.2-2.1.1"
+version = "1.11.2-2.1.2"
 version =  version + "-build-T" + ext.build
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
