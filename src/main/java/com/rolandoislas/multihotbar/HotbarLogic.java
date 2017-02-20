@@ -185,16 +185,25 @@ public class HotbarLogic {
     /**
      * Reset hotbar.
      * Updates index, order, current item, and toggle.
+     * @param resetCurrentItem should the current item be reset
      */
-    public static void reset() {
+    private static void reset(boolean resetCurrentItem) {
         setShowDefault(false);
         updateTooltips();
         hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
             hotbarOrder[i] = i;
         try {
-            Minecraft.getMinecraft().player.inventory.currentItem = 0;
+            if (resetCurrentItem)
+                Minecraft.getMinecraft().player.inventory.currentItem = 0;
         } catch (Exception ignore) {}
+    }
+
+    /**
+     * @see HotbarLogic#reset(boolean)
+     */
+    private static void reset() {
+        reset(true);
     }
 
     /**
@@ -208,6 +217,7 @@ public class HotbarLogic {
                 for (WorldJson worldJson : worldJsonArray) {
                     if (worldJson.getId().equals(getWorldId())) {
                         found = true;
+                        reset(false);
                         worldJson.setIndex(hotbarIndex);
                         worldJson.setOrder(hotbarOrder);
                         break;
@@ -245,6 +255,7 @@ public class HotbarLogic {
             if (worldJsonArray != null) {
                 for (WorldJson worldJson : worldJsonArray) {
                     if (worldJson.getId().equals(getWorldId())) {
+                        reset(false);
                         hotbarIndex = worldJson.getIndex();
                         hotbarOrder = worldJson.getOrder();
                         break;

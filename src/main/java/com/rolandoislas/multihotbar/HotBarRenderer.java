@@ -52,6 +52,38 @@ public class HotBarRenderer extends Gui {
         drawSelection();
         drawItems();
         drawTooltip();
+        if (Minecraft.getMinecraft().player != null &&
+                !Minecraft.getMinecraft().player.inventory.offHandInventory.get(0).isEmpty()) {
+            drawOffhandSlot();
+            drawOffhandItem();
+        }
+    }
+
+    private void drawOffhandItem() {
+        GlStateManager.enableRescaleNormal();
+        RenderHelper.enableGUIStandardItemLighting();
+        ItemStack item = minecraft.player.inventory.offHandInventory.get(0);
+        int[] coords = getHotbarCoords(0);
+        int x = coords[0] - SELECTOR_SIZE - 2;
+        int y = coords[1] + 3;
+        minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, x, y);
+        minecraft.getRenderItem().renderItemOverlays(minecraft.fontRendererObj, item, x, y);
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableRescaleNormal();
+    }
+
+    private void drawOffhandSlot() {
+        int[] coords = getHotbarCoords(0);
+        minecraft.getTextureManager().bindTexture(WIDGETS);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableLighting();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ZERO);
+        minecraft.ingameGUI.drawTexturedModalRect(coords[0] - SELECTOR_SIZE - 5, coords[1],
+                SELECTOR_SIZE, HOTBAR_HEIGHT + 1,
+                HOTBAR_HEIGHT, HOTBAR_HEIGHT);
     }
 
     private void drawTooltip() {
