@@ -16,7 +16,7 @@ import java.util.Map;
 public class MultiHotbar
 {
     public static final String MODID = "multihotbar";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "2.1.2";
     public static final String NAME = "Multi-Hotbar";
     @Mod.Instance(MODID)
     @SuppressWarnings("unused")

@@ -32,7 +32,7 @@ public class HotBarRenderer extends Gui {
     public void render(RenderGameOverlayEvent event) {
         // Check if hotbar should render
         if (!(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable() &&
-                !HotbarLogic.showDefault))
+                !HotbarLogic.shouldShowDefault()))
             return;
         event.setCanceled(true);
         // Render
@@ -52,6 +52,38 @@ public class HotBarRenderer extends Gui {
         drawSelection();
         drawItems();
         drawTooltip();
+        if (Minecraft.getMinecraft().thePlayer != null &&
+                Minecraft.getMinecraft().thePlayer.inventory.offHandInventory[0] != null) {
+            drawOffhandSlot();
+            drawOffhandItem();
+        }
+    }
+
+    private void drawOffhandItem() {
+        GlStateManager.enableRescaleNormal();
+        RenderHelper.enableGUIStandardItemLighting();
+        ItemStack item = minecraft.thePlayer.inventory.offHandInventory[0];
+        int[] coords = getHotbarCoords(0);
+        int x = coords[0] - SELECTOR_SIZE - 2;
+        int y = coords[1] + 3;
+        minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, x, y);
+        minecraft.getRenderItem().renderItemOverlays(minecraft.fontRendererObj, item, x, y);
+        RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableRescaleNormal();
+    }
+
+    private void drawOffhandSlot() {
+        int[] coords = getHotbarCoords(0);
+        minecraft.getTextureManager().bindTexture(WIDGETS);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableLighting();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ZERO);
+        minecraft.ingameGUI.drawTexturedModalRect(coords[0] - SELECTOR_SIZE - 5, coords[1],
+                SELECTOR_SIZE, HOTBAR_HEIGHT + 1,
+                HOTBAR_HEIGHT, HOTBAR_HEIGHT);
     }
 
     private void drawTooltip() {
@@ -197,7 +229,7 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
+        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -211,7 +243,7 @@ public class HotBarRenderer extends Gui {
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.showDefault) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
+        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
             renderPosted = true;
             GL11.glPopMatrix();
         }
