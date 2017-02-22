@@ -50,7 +50,9 @@ compileJava {
 
 idea.module.inheritOutputDirs = true
 
-dependencies {}
+dependencies {
+    compile fileTree(dir: "lib", include: ["*.jar"])
+}
 
 processResources
 {
@@ -69,5 +71,6 @@ processResources
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+        exclude 'invtweaks_at.cfg'
     }
 }

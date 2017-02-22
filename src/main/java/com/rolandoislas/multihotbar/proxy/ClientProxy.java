@@ -19,6 +19,7 @@ public class ClientProxy extends CommonProxy {
         // Register overlay event handler
         EventHandlerClient eventHandlerClient = new EventHandlerClient();
         MinecraftForge.EVENT_BUS.register(eventHandlerClient);
+        FMLCommonHandler.instance().bus().register(eventHandlerClient);
         // Register KeyBindings
         KeyBindings.load();
     }
