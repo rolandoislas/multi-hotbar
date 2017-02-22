@@ -67,7 +67,7 @@ public class HotbarLogic {
      * @param event mouse event
      */
     public void mouseEvent(MouseEvent event) {
-        if (InventoryHelper.waitForInventoryTweaks() || HotbarLogic.shouldShowDefault())
+        if (HotbarLogic.shouldShowDefault())
             return;
         // Scrolled
         if (event.getDwheel() != 0) {
@@ -137,8 +137,6 @@ public class HotbarLogic {
      * @param event Key input
      */
     public void keyPressed(InputEvent.KeyInputEvent event) {
-        if (InventoryHelper.waitForInventoryTweaks())
-            return;
         // Check toggle key
         if (KeyBindings.showDefaultHotbar.isPressed()) {
             setShowDefault(!shouldShowDefault());

@@ -6,14 +6,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.Loader;
 
 /**
  * Created by Rolando on 6/11/2016.
  */
 public class InventoryHelper {
-    private static int lastItem = -1;
-    private static int waitTicks = 0;
 
     /**
      * Swap hotbar items
@@ -22,10 +19,6 @@ public class InventoryHelper {
      */
     public static void swapHotbars(int firstIndex, int secondIndex) {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
-        waitTicks = 1000000; // One MILLION ticks!
-        if (lastItem < 0)
-            lastItem = player.inventory.currentItem;
-        boolean slotFound = false;
         int firstSlotIndex = indexToSlot(firstIndex);
         int secondSlotIndex = indexToSlot(secondIndex);
         int firstSlotindex936 = indexToSlot936(firstIndex);
@@ -35,19 +28,6 @@ public class InventoryHelper {
             ItemStack secondItem = player.inventory.getStackInSlot(secondSlotIndex + i);
             if (!firstItem.isEmpty() || !secondItem.isEmpty())
                 swapSlot(firstSlotindex936 + i, secondSlotindex936 + i);
-            if (Loader.isModLoaded("inventorytweaks")) {
-                // Set currentItem to a mull slot or two item slots
-                if ((!slotFound) && (!firstItem.isEmpty() || !secondItem.isEmpty())) {
-                    player.inventory.currentItem = i;
-                    slotFound = true;
-                }
-                // Set the current item to an invalid one
-                else if ((!slotFound) && i == InventoryPlayer.getHotbarSize() - 1)
-                    player.inventory.currentItem = -1;
-                waitTicks = 5; // Wait a few ticks so Inventory Tweaks' tick event doesn't catch the move
-            }
-            else
-                waitTicks = 0;
         }
     }
 
@@ -75,14 +55,7 @@ public class InventoryHelper {
      * Change current item after a few ticks. Reverts to slot that was selected before hotbar swap.
      */
     public static void tick() {
-        if (waitTicks > 0) {
-            waitTicks--;
-            return;
-        }
-        if (lastItem > -1) {
-            Minecraft.getMinecraft().player.inventory.currentItem = lastItem;
-            lastItem = -1;
-        }
+        InvTweaksHelper.tick();
     }
 
     /**
@@ -92,15 +65,6 @@ public class InventoryHelper {
      */
     static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().player;
-        // Check if current item should be changed to avoid inventory tweaks autoreplace
-        if (lastItem < 0 && Loader.isModLoaded("inventorytweaks")) {
-            if (fullInventoryToMainInventory(firstSlot) == player.inventory.currentItem ||
-                    fullInventoryToMainInventory(secondSlot) == player.inventory.currentItem) {
-                lastItem = player.inventory.currentItem;
-                player.inventory.currentItem = lastItem + 1 <= 8 ? lastItem + 1 : 0;
-                waitTicks = 5;
-            }
-        }
         // Move items
         int window = player.inventoryContainer.windowId;
         try {
@@ -110,6 +74,8 @@ public class InventoryHelper {
         } catch (IndexOutOfBoundsException ignore) {}
         HotbarLogic.ignoreSlot(fullInventoryToMainInventory(firstSlot));
         HotbarLogic.ignoreSlot(fullInventoryToMainInventory(secondSlot));
+        // InvTweaks delay
+        InvTweaksHelper.addDelay();
     }
 
     /**
@@ -128,13 +94,5 @@ public class InventoryHelper {
      */
     static int mainInventoryToFullInventory(int slotIndex) {
         return slotIndex >= 9 ? slotIndex : 36 + slotIndex;
-    }
-
-    /**
-     * Check if logic should be halted while a hotbar swap operation is happening.
-     * @return is waiting for action to complete
-     */
-    static boolean waitForInventoryTweaks() {
-        return waitTicks > 0;
     }
 }

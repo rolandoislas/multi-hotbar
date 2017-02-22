@@ -66,6 +66,7 @@ public class EventHandlerClient {
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         hotbarLogic.disconnectedFromServer(event);
+        InvTweaksHelper.reset();
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
