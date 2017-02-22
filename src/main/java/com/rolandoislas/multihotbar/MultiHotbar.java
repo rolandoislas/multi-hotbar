@@ -42,20 +42,4 @@ public class MultiHotbar
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);
     }
-
-    @NetworkCheckHandler
-    @SuppressWarnings("unused")
-    public boolean checkServerhasMod(Map<String,String> listData, Side side) {
-        boolean hasMod = false;
-        for (Map.Entry<String, String> entry : listData.entrySet())
-            if (entry.getKey().equalsIgnoreCase(MODID))
-                hasMod = true;
-        // Set the hotbar to 1 (basically vanilla) if server does not have mod
-        if (!hasMod)
-            Config.numberOfHotbars = 1;
-        else
-            Config.reload();
-        // Always return true to allow Forge to connect to server
-        return true;
-    }
 }
