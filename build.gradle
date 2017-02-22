@@ -21,7 +21,7 @@ group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/gui
 archivesBaseName = "multihotbar"
 
 minecraft {
-    version = "1.11.2-13.20.0.2206"
+    version = "1.11.2-13.20.0.2228"
     runDir = "run"
     mappings = "snapshot_20161220"
 }
