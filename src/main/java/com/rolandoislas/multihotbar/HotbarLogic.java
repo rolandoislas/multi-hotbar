@@ -7,6 +7,8 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -410,6 +412,7 @@ public class HotbarLogic {
             waitForItemTicks++;
         if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null)
             return;
+        waitForItemTicks = 0;
         // Move the picked up item to the correct slot
         int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
         int clickSlotSecond = InventoryHelper.mainInventoryToFullInventory(getFirstEmptyStack());
@@ -487,7 +490,9 @@ public class HotbarLogic {
         // Set the inventory
         if (inventory == null ||
                 // Ignore if inventory is open TODO check inventory movement better
-                Minecraft.getMinecraft().currentScreen instanceof GuiInventory) {
+                Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
+                Minecraft.getMinecraft().currentScreen instanceof GuiContainer ||
+                Minecraft.getMinecraft().currentScreen instanceof GuiContainerCreative) {
             inventory = player.inventory.mainInventory.clone();
         }
         // Find the changed item
