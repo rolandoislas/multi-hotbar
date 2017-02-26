@@ -1,4 +1,4 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.data;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;

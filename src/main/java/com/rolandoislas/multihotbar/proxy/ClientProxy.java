@@ -1,9 +1,8 @@
 package com.rolandoislas.multihotbar.proxy;
 
-import com.rolandoislas.multihotbar.EventHandlerClient;
-import com.rolandoislas.multihotbar.KeyBindings;
+import com.rolandoislas.multihotbar.event.EventHandlerClient;
+import com.rolandoislas.multihotbar.data.KeyBindings;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;

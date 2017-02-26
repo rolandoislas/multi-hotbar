@@ -6,13 +6,10 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.NetworkCheckHandler;
-import net.minecraftforge.fml.relauncher.Side;
-
-import java.util.Map;
+import org.apache.logging.log4j.Logger;
 
 @Mod(modid = MultiHotbar.MODID, version = MultiHotbar.VERSION, name = MultiHotbar.NAME, acceptableRemoteVersions = "*",
-    guiFactory = "com.rolandoislas.multihotbar.GuiFactory", canBeDeactivated = true)
+    guiFactory = "com.rolandoislas.multihotbar.gui.GuiFactory", canBeDeactivated = true)
 public class MultiHotbar
 {
     public static final String MODID = "multihotbar";
@@ -24,10 +21,12 @@ public class MultiHotbar
     @SidedProxy(clientSide = "com.rolandoislas.multihotbar.proxy.ClientProxy",
             serverSide = "com.rolandoislas.multihotbar.proxy.CommonProxy")
     public static CommonProxy proxy;
+    public static Logger logger;
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
     public void preInit(FMLPreInitializationEvent event) {
+	    logger = event.getModLog();
         proxy.preInit(event);
     }
 

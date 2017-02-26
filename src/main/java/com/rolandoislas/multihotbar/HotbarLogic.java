@@ -2,6 +2,10 @@ package com.rolandoislas.multihotbar;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.data.KeyBindings;
+import com.rolandoislas.multihotbar.data.WorldJson;
+import com.rolandoislas.multihotbar.util.InventoryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -28,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -328,6 +333,9 @@ public class HotbarLogic {
     public void pickupEvent(EntityItemPickupEvent event) {
         if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
+        // Ignore events for other players
+        if (event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().player.getUniqueID())
+            return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().player;
         if (player == null)
@@ -405,7 +413,13 @@ public class HotbarLogic {
             return;
         // Wait for item to appear after an uncertain number of ticks
         if (waitForItemTicks >= 40) {
-            this.pickupSlot.remove(0);
+            try {
+                // FIXME is the player tick event being called from more than one thread?
+                this.pickupSlot.remove(0);
+            }
+            catch (ArrayIndexOutOfBoundsException e) {
+                MultiHotbar.logger.error(e);
+            }
             waitForItemTicks = 0;
             return;
         }
@@ -427,7 +441,7 @@ public class HotbarLogic {
      * Calls load()
      * @param event client event
      */
-    void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+	public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         worldAddress = event.getManager().getRemoteAddress().toString();
         isWorldLocal = event.isLocal();
         load();
@@ -437,7 +451,7 @@ public class HotbarLogic {
      * Calls save()
      * @param event client event
      */
-    void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+    public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         save();
     }
 
@@ -445,7 +459,7 @@ public class HotbarLogic {
      * Checks if the player has died and resets if keepinventory game rule is disabled.
      * @param event death event
      */
-    void deathEvent(LivingDeathEvent event) {
+    public void deathEvent(LivingDeathEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
             if (!player.getUniqueID().equals(Minecraft.getMinecraft().player.getUniqueID()))
@@ -595,7 +609,7 @@ public class HotbarLogic {
      * Ignore a slot for a few ticks
      * @param slot slot index (0-35)
      */
-    static void ignoreSlot(int slot) {
+    public static void ignoreSlot(int slot) {
         ignoreSlots.put(slot, 5);
     }
 }

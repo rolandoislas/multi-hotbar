@@ -33,13 +33,16 @@ if (ext.tag) {
         project {
             id = "246054"
             changelog = System.getenv("TRAVIS_COMMIT_MESSAGE") ?: ""
-            if (ext.tag.contains("alpha"))
-                releaseType = "alpha"
+            if (ext.tag.contains("release"))
+                releaseType = "release"
             else if (ext.tag.contains("beta"))
                 releaseType = "beta"
             else
-                releaseType = "release"
+                releaseType = "alpha"
             mainArtifact jar
+            relations {
+                optionalLibrary "inventory-tweaks"
+            }
         }
     }
 }

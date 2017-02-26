@@ -1,5 +1,7 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.gui;
 
+import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.MultiHotbar;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;

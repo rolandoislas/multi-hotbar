@@ -1,5 +1,14 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.event;
 
+import com.rolandoislas.multihotbar.HotBarRenderer;
+import com.rolandoislas.multihotbar.HotbarLogic;
+import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.gui.HotbarGuiInventory;
+import com.rolandoislas.multihotbar.util.InvTweaksHelper;
+import com.rolandoislas.multihotbar.util.InventoryHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -78,5 +87,14 @@ public class EventHandlerClient {
     public void playerTick(TickEvent.PlayerTickEvent event) {
         InventoryHelper.tick();
         hotbarLogic.playerTick(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void guiEvent(GuiScreenEvent event) {
+        if (Config.useCustomInventory && event.getGui().getClass() == GuiInventory.class) {
+            if (event.isCancelable())
+                event.setCanceled(true);
+            Minecraft.getMinecraft().displayGuiScreen(new HotbarGuiInventory());
+        }
     }
 }
