@@ -334,7 +334,8 @@ public class HotbarLogic {
         if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
         // Ignore events for other players
-        if (event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().player.getUniqueID())
+        if (event.getEntityPlayer() != null &&
+                event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().player.getUniqueID())
             return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().player;
