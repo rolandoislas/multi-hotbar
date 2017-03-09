@@ -118,7 +118,7 @@ public class HotbarLogic {
      * Move to adjacent hotbar. Loops to first or last hotbar.
      * @param forward move forward instead of backward
      */
-    private void moveSelection(boolean forward) {
+    private static void moveSelection(boolean forward) {
         if (Config.numberOfHotbars == 1)
             return;
         int previousIndex = hotbarIndex;
@@ -135,7 +135,7 @@ public class HotbarLogic {
     /**
      * Go to next hotbar. Loops to first hotbar.
      */
-    private void moveSelectionToNextHotbar() {
+    private static void moveSelectionToNextHotbar() {
         moveSelection(true);
     }
 
@@ -182,7 +182,7 @@ public class HotbarLogic {
      * Move to a specific hotbar.
      * @param index hotbar index
      */
-    private void moveSelectionToHotbar(int index) {
+    public static void moveSelectionToHotbar(int index) {
         while (hotbarIndex != index)
             moveSelectionToNextHotbar();
     }
@@ -334,7 +334,7 @@ public class HotbarLogic {
         if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
         // Ignore events for other players
-        if (event.getEntityPlayer() != null &&
+        if (event.getEntityPlayer() != null && Minecraft.getMinecraft().player != null &&
                 event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().player.getUniqueID())
             return;
         // Check if compatible stack is in inventory
