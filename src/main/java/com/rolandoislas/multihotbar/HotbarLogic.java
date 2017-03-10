@@ -463,7 +463,8 @@ public class HotbarLogic {
     public void deathEvent(LivingDeathEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
-            if (!player.getUniqueID().equals(Minecraft.getMinecraft().player.getUniqueID()))
+            if (player == null || Minecraft.getMinecraft().player == null ||
+                    !player.getUniqueID().equals(Minecraft.getMinecraft().player.getUniqueID()))
                 return;
             if (!player.world.getGameRules().getBoolean("keepInventory"))
                 HotbarLogic.reset();
