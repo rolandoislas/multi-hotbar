@@ -1,4 +1,4 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.data;
 
 /**
  * Created by Rolando on 6/12/2016.

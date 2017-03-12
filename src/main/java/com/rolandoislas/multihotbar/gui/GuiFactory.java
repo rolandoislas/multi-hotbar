@@ -1,4 +1,4 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;

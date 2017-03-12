@@ -1,5 +1,7 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.util;
 
+import com.rolandoislas.multihotbar.HotbarLogic;
+import com.rolandoislas.multihotbar.data.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
@@ -63,7 +65,8 @@ public class InventoryHelper {
      * @param firstSlot Slot index (9-44)
      * @param secondSlot Slot index (9-44)
      */
-    static void swapSlot(int firstSlot, int secondSlot) {
+
+    public static void swapSlot(int firstSlot, int secondSlot) {
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         // Move items
         int window = player.inventoryContainer.windowId;
@@ -92,7 +95,21 @@ public class InventoryHelper {
      * @param slotIndex mainInventory index
      * @return full inventory index (9-44)
      */
-    static int mainInventoryToFullInventory(int slotIndex) {
+    public static int mainInventoryToFullInventory(int slotIndex) {
         return slotIndex >= 9 ? slotIndex : 36 + slotIndex;
+    }
+
+    /**
+     * Converts a normal slot to a slot based on the hotbar index
+     * @param slot normal slot 9-44
+     */
+    public static int normalSlotToHotbarOrderedSlot(int slot, boolean clickOffset) {
+        if (slot < 9 || slot > 44)
+            return slot;
+        slot = fullInventoryToMainInventory(slot);
+        int index = (int) Math.floor(slot / 9);
+        int hotbarIndex = HotbarLogic.hotbarOrder[Config.inventoryOrder[index]];
+        slot = indexToSlot(hotbarIndex) + slot % 9;
+        return clickOffset ? mainInventoryToFullInventory(slot) : slot;
     }
 }

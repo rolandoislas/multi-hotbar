@@ -2,6 +2,10 @@ package com.rolandoislas.multihotbar;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.data.KeyBindings;
+import com.rolandoislas.multihotbar.data.WorldJson;
+import com.rolandoislas.multihotbar.util.InventoryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -29,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -114,7 +119,7 @@ public class HotbarLogic {
      * Move to adjacent hotbar. Loops to first or last hotbar.
      * @param forward move forward instead of backward
      */
-    private void moveSelection(boolean forward) {
+    private static void moveSelection(boolean forward) {
         if (Config.numberOfHotbars == 1)
             return;
         int previousIndex = hotbarIndex;
@@ -131,7 +136,7 @@ public class HotbarLogic {
     /**
      * Go to next hotbar. Loops to first hotbar.
      */
-    private void moveSelectionToNextHotbar() {
+    private static void moveSelectionToNextHotbar() {
         moveSelection(true);
     }
 
@@ -178,7 +183,7 @@ public class HotbarLogic {
      * Move to a specific hotbar.
      * @param index hotbar index
      */
-    private void moveSelectionToHotbar(int index) {
+    public static void moveSelectionToHotbar(int index) {
         while (hotbarIndex != index)
             moveSelectionToNextHotbar();
     }
@@ -329,6 +334,10 @@ public class HotbarLogic {
     public void pickupEvent(EntityItemPickupEvent event) {
         if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
+        // Ignore events for other players
+        if (event.getEntityPlayer() != null && Minecraft.getMinecraft().thePlayer != null &&
+                event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().thePlayer.getUniqueID())
+            return;
         // Check if compatible stack is in inventory
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         if (player == null)
@@ -406,7 +415,13 @@ public class HotbarLogic {
             return;
         // Wait for item to appear after an uncertain number of ticks
         if (waitForItemTicks >= 40) {
-            this.pickupSlot.remove(0);
+            try {
+                // FIXME is the player tick event being called from more than one thread?
+                this.pickupSlot.remove(0);
+            }
+            catch (ArrayIndexOutOfBoundsException e) {
+                MultiHotbar.logger.error(e);
+            }
             waitForItemTicks = 0;
             return;
         }
@@ -428,7 +443,7 @@ public class HotbarLogic {
      * Calls load()
      * @param event client event
      */
-    void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+	public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         worldAddress = event.getManager().getRemoteAddress().toString();
         isWorldLocal = event.isLocal();
         load();
@@ -438,7 +453,7 @@ public class HotbarLogic {
      * Calls save()
      * @param event client event
      */
-    void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+    public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         save();
     }
 
@@ -446,10 +461,11 @@ public class HotbarLogic {
      * Checks if the player has died and resets if keepinventory game rule is disabled.
      * @param event death event
      */
-    void deathEvent(LivingDeathEvent event) {
+    public void deathEvent(LivingDeathEvent event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
-            if (!player.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()))
+            if (player == null || Minecraft.getMinecraft().thePlayer == null ||
+                    !player.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()))
                 return;
             if (!player.worldObj.getGameRules().getBoolean("keepInventory"))
                 HotbarLogic.reset();
@@ -596,7 +612,7 @@ public class HotbarLogic {
      * Ignore a slot for a few ticks
      * @param slot slot index (0-35)
      */
-    static void ignoreSlot(int slot) {
+    public static void ignoreSlot(int slot) {
         ignoreSlots.put(slot, 5);
     }
 }

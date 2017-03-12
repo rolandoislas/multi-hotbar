@@ -1,5 +1,6 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.util;
 
+import com.rolandoislas.multihotbar.data.Config;
 import invtweaks.InvTweaks;
 import net.minecraftforge.fml.common.Loader;
 import org.apache.commons.io.IOUtils;

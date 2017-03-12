@@ -1,5 +1,6 @@
 package com.rolandoislas.multihotbar;
 
+import com.rolandoislas.multihotbar.data.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
