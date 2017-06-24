@@ -341,10 +341,10 @@ public class HotbarLogic {
         EntityPlayer player = Minecraft.getMinecraft().player;
         if (player == null)
             return;
-        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
+        int slot = getFirstCompatibleStack(event.getItem().getItem());
         if (slot >= 0) {
             ItemStack stack = player.inventory.getStackInSlot(slot);
-            if (stack.isEmpty() || stack.getCount() + event.getItem().getEntityItem().getCount() <= stack.getMaxStackSize())
+            if (stack.isEmpty() || stack.getCount() + event.getItem().getItem().getCount() <= stack.getMaxStackSize())
                 return;
         }
         // Get the first empty stack

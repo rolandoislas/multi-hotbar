@@ -72,7 +72,7 @@ public class HotBarRenderer extends Gui {
         int x = coords[0] - SELECTOR_SIZE - 2;
         int y = coords[1] + 3;
         minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, x, y);
-        minecraft.getRenderItem().renderItemOverlays(minecraft.fontRendererObj, item, x, y);
+        minecraft.getRenderItem().renderItemOverlays(minecraft.fontRenderer, item, x, y);
         RenderHelper.disableStandardItemLighting();
         GlStateManager.disableRescaleNormal();
     }
@@ -102,7 +102,7 @@ public class HotBarRenderer extends Gui {
             return;
         ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int x = scaledResolution.getScaledWidth() / 2 -
-                minecraft.fontRendererObj.getStringWidth(item.getDisplayName()) / 2;
+                minecraft.fontRenderer.getStringWidth(item.getDisplayName()) / 2;
         int y = coords[1] - 37 + (minecraft.playerController.shouldDrawHUD() ? 0 : 14);
         int color = (int) (tooltipTicks * 256f / 10f);
         color = color > 255 ? 255 : color;
@@ -110,7 +110,7 @@ public class HotBarRenderer extends Gui {
             GlStateManager.pushMatrix();
             GlStateManager.enableBlend();
             OpenGlHelper.glBlendFunc(770, 771, 1, 0);
-            minecraft.fontRendererObj.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
+            minecraft.fontRenderer.drawStringWithShadow(item.getDisplayName(), x, y, 16777215 + (color << 24));
             GlStateManager.disableBlend();
             GlStateManager.popMatrix();
         }
@@ -216,7 +216,7 @@ public class HotBarRenderer extends Gui {
                 minecraft.getRenderItem().renderItemAndEffectIntoGUI(item, itemX, itemY);
                 if (pickupAnimation > 0.0F)
                     GlStateManager.popMatrix();
-                minecraft.getRenderItem().renderItemOverlays(minecraft.fontRendererObj, item, itemX, itemY);
+                minecraft.getRenderItem().renderItemOverlays(minecraft.fontRenderer, item, itemX, itemY);
             }
         }
         RenderHelper.disableStandardItemLighting();
