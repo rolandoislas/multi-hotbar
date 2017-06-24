@@ -39,7 +39,11 @@ public class HotBarRenderer extends Gui {
         // Render
         GlStateManager.color(1, 1, 1, 1);
         //GlStateManager.disableLighting();
-        if (Config.numberOfHotbars == 1)
+        if (Config.stackedHotbars) {
+            for (int hotbar = 0; hotbar < Config.numberOfHotbars; hotbar++)
+                drawSingle(hotbar);
+        }
+        else if (Config.numberOfHotbars == 1)
             drawSingle(0);
         else if (Config.numberOfHotbars == 2)
             drawDouble(0);
@@ -91,6 +95,8 @@ public class HotBarRenderer extends Gui {
         if (tooltipTicks > 0)
             tooltipTicks--;
         int[] coords = getHotbarCoords(Config.numberOfHotbars >= 3 ? 2 : 0);
+        if (Config.stackedHotbars)
+            coords = getHotbarCoords(Config.numberOfHotbars - 1);
         ItemStack item = minecraft.thePlayer.inventory.getCurrentItem();
         if (item == null || tooltipTicks == 0)
             return;
@@ -150,7 +156,7 @@ public class HotBarRenderer extends Gui {
         Minecraft minecraft = Minecraft.getMinecraft();
         ScaledResolution scaledResolution = new ScaledResolution(minecraft);
         int[] coords = new int[2];
-        if (Config.numberOfHotbars == 1) {
+        if (Config.stackedHotbars || Config.numberOfHotbars == 1) {
             coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
             coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
         }
@@ -228,12 +234,14 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
+        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.getType())) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
             GL11.glPushMatrix();
-            GL11.glTranslatef(0, -22, 0);
+            int y = Config.stackedHotbars ? -HOTBAR_HEIGHT * (Config.numberOfHotbars - 1) : -HOTBAR_HEIGHT;
+            GL11.glTranslatef(0, y, 0);
         }
     }
 
@@ -242,7 +250,8 @@ public class HotBarRenderer extends Gui {
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.getType())) {
+        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.getType())) {
             renderPosted = true;
             GL11.glPopMatrix();
         }

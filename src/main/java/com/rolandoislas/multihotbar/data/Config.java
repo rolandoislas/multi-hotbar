@@ -23,6 +23,7 @@ public class Config {
     public static boolean relativeHotbarPickups;
     public static int[] inventoryOrder;
     public static boolean useCustomInventory;
+    public static boolean stackedHotbars;
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -50,6 +51,8 @@ public class Config {
         inventoryOrder = commaIntStringToArray(config.getString("Inventory Order", Configuration.CATEGORY_GENERAL,
                 "0,1,2,3", "Sets the order of the inventory rows\n" +
                         "Expects a no spaces, comma separated list with the values 0-3 each used once."));
+        stackedHotbars = config.getBoolean("Stacked Hotbars", Configuration.CATEGORY_GENERAL, false,
+                "If true there will be only one hotbar per row.");
         config.save();
     }
 
