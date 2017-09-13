@@ -30,9 +30,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Rolando on 6/7/2016.
@@ -43,13 +47,14 @@ public class HotbarLogic {
     private static boolean showDefault = false;
     private static WorldJson[] worldJsonArray;
     private String worldAddress;
-    private ArrayList<Integer> pickupSlot = new ArrayList<Integer>();
+    private ArrayList<Integer> pickupSlot = new ArrayList<>();
     private boolean isWorldLocal;
     private List<ItemStack> inventory;
     private static int inventoryReorderDelayTicks = 0;
     private int pickedUpAmountThisTick = 0;
     private int waitForItemTicks = 0;
-    private static ConcurrentHashMap<Integer, Integer> ignoreSlots = new ConcurrentHashMap<Integer, Integer>();
+    private static ConcurrentHashMap<Integer, Integer> ignoreSlots = new ConcurrentHashMap<>();
+    private static Lock pickupMutex = new ReentrantLock();
 
     /**
      * Checks if the custom hotbar should be shown
@@ -341,10 +346,10 @@ public class HotbarLogic {
         EntityPlayer player = Minecraft.getMinecraft().player;
         if (player == null)
             return;
-        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
+        int slot = getFirstCompatibleStack(event.getItem().getItem());
         if (slot >= 0) {
             ItemStack stack = player.inventory.getStackInSlot(slot);
-            if (stack.isEmpty() || stack.getCount() + event.getItem().getEntityItem().getCount() <= stack.getMaxStackSize())
+            if (stack.isEmpty() || stack.getCount() + event.getItem().getItem().getCount() <= stack.getMaxStackSize())
                 return;
         }
         // Get the first empty stack
@@ -355,7 +360,9 @@ public class HotbarLogic {
         // Does not need a move
         if (slot == getFirstEmptyStack())
             return;
+        pickupMutex.lock();
         this.pickupSlot.add(slot);
+        pickupMutex.unlock();
         addInventoryReorderDelay(5);
         pickedUpAmountThisTick++;
     }
@@ -400,34 +407,37 @@ public class HotbarLogic {
      * After too many ticks top item in queue is removed.
      */
     private void reorderPickedupItem() {
-        if (shouldShowDefault() || Config.relativeHotbarPickups)
+        pickupMutex.lock();
+        if (shouldShowDefault() || Config.relativeHotbarPickups) {
+            pickupMutex.unlock();
             return;
+        }
         // Update item tick counters
         pickedUpAmountThisTick = 0;
         if (inventoryReorderDelayTicks > 0) {
             inventoryReorderDelayTicks--;
+            pickupMutex.unlock();
             return;
         }
         EntityPlayer player = Minecraft.getMinecraft().player;
         // Nothing to move
-        if (this.pickupSlot.isEmpty())
+        if (this.pickupSlot.isEmpty()) {
+            pickupMutex.unlock();
             return;
+        }
         // Wait for item to appear after an uncertain number of ticks
         if (waitForItemTicks >= 40) {
-            try {
-                // FIXME is the player tick event being called from more than one thread?
-                this.pickupSlot.remove(0);
-            }
-            catch (ArrayIndexOutOfBoundsException e) {
-                MultiHotbar.logger.error(e);
-            }
+            this.pickupSlot.remove(0);
             waitForItemTicks = 0;
+            pickupMutex.unlock();
             return;
         }
         else
             waitForItemTicks++;
-        if (player.inventory.getStackInSlot(pickupSlot.get(0)).isEmpty())
+        if (player.inventory.getStackInSlot(pickupSlot.get(0)).isEmpty()) {
+            pickupMutex.unlock();
             return;
+        }
         waitForItemTicks = 0;
         // Move the picked up item to the correct slot
         int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
@@ -435,6 +445,7 @@ public class HotbarLogic {
         InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
         if (this.pickupSlot.size() > 0)
             this.pickupSlot.remove(0);
+        pickupMutex.unlock();
     }
 
     /**

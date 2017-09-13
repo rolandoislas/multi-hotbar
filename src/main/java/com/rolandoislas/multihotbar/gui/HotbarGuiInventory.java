@@ -1,7 +1,7 @@
 package com.rolandoislas.multihotbar.gui;
 
 import com.rolandoislas.multihotbar.inventory.HotbarContainer;
-import com.rolandoislas.multihotbar.inventory.InventorySlotNeverEmpty;
+import com.rolandoislas.multihotbar.inventory.HotbarOrderedInventory;
 import com.rolandoislas.multihotbar.util.InventoryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -35,10 +35,12 @@ public class HotbarGuiInventory extends GuiInventory {
 		((HotbarContainer)inventorySlots).postDraw();
 		// Fix for "Q" throw
 		Slot theSlot = getSlotUnderMouse();
-		theSlot = new Slot(new InventorySlotNeverEmpty(),
+		theSlot = new Slot(new HotbarOrderedInventory(theSlot != null ? theSlot.inventory : null),
 				theSlot != null ? theSlot.slotNumber : 0, 0, 0);
 		theSlot.slotNumber = theSlot.getSlotIndex();
 		ReflectionHelper.setPrivateValue(GuiContainer.class, this, theSlot,
-				"theSlot", "field_147006_u");
+				"hoveredSlot", "field_147006_u");
+		ReflectionHelper.setPrivateValue(GuiContainer.class, this, theSlot,
+				"clickedSlot", "field_147005_v");
 	}
 }
