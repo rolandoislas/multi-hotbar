@@ -2,7 +2,6 @@ package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
-import com.rolandoislas.multihotbar.util.InventoryHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -24,6 +23,7 @@ public class Config {
     public static int[] inventoryOrder;
     public static boolean useCustomInventory;
     public static boolean stackedHotbars;
+    public static boolean shiftChat;
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -43,7 +43,7 @@ public class Config {
                 "When enabled slots are filled starting with the currently selected hotbar. " +
                         "If disabled slots fill starting from the first hotbar.");
         useCustomInventory = config.getBoolean("Custom Inventory", Configuration.CATEGORY_GENERAL,
-                false,
+                true,
                 "If true the normal inventory screen will be replaced with a mostly identical screen that " +
                         "allows rows to appear static and order to be customized.\n" +
                         TextFormatting.RED + "[ALPHA]" + TextFormatting.RESET + "\n" +
@@ -53,6 +53,8 @@ public class Config {
                         "Expects a no spaces, comma separated list with the values 0-3 each used once."));
         stackedHotbars = config.getBoolean("Stacked Hotbars", Configuration.CATEGORY_GENERAL, false,
                 "If true there will be only one hotbar per row.");
+        shiftChat = config.getBoolean("Shift Chat", Configuration.CATEGORY_GENERAL, false,
+                "Shifts chat up in the event there is more than one row of hotbars.");
         config.save();
     }
 

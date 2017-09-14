@@ -9,6 +9,7 @@ import java.util.Set;
 /**
  * Created by Rolando on 6/10/2016.
  */
+@SuppressWarnings("unused")
 public class GuiFactory implements IModGuiFactory {
     @Override
     public void initialize(Minecraft minecraftInstance) {

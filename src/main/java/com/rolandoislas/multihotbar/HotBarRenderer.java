@@ -262,7 +262,7 @@ public class HotBarRenderer extends Gui {
     }
 
     private boolean isElementToShift(RenderGameOverlayEvent.ElementType type) {
-        return type == RenderGameOverlayEvent.ElementType.CHAT ||
+        return (type.equals(RenderGameOverlayEvent.ElementType.CHAT) && Config.shiftChat) ||
                 type == RenderGameOverlayEvent.ElementType.HEALTH ||
                 type == RenderGameOverlayEvent.ElementType.AIR ||
                 type == RenderGameOverlayEvent.ElementType.ARMOR ||

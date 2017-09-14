@@ -1,7 +1,7 @@
 package com.rolandoislas.multihotbar.inventory;
 
+import com.rolandoislas.multihotbar.util.InventoryHelper;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
@@ -9,15 +9,23 @@ import net.minecraft.util.text.ITextComponent;
 /**
  * Created by Rolando on 3/6/2017.
  */
-public class InventorySlotNeverEmpty implements IInventory {
+public class HotbarOrderedInventory implements IInventory {
+	private final IInventory inventory;
+
+	public HotbarOrderedInventory(IInventory inventory) {
+		this.inventory = inventory;
+	}
+
 	@Override
 	public int getSizeInventory() {
-		return 1;
+		return inventory.getSizeInventory();
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int index) {
-		return new ItemStack(Items.CARROT);
+		if (inventory == null)
+			return null;
+		return inventory.getStackInSlot(InventoryHelper.normalSlotToHotbarOrderedSlot(index, false));
 	}
 
 	@Override
