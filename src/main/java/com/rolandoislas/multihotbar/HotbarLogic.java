@@ -197,7 +197,7 @@ public class HotbarLogic {
      * Updates index, order, current item, and toggle.
      * @param resetCurrentItem should the current item be reset
      */
-    private static void reset(boolean resetCurrentItem) {
+    public static void reset(boolean resetCurrentItem) {
         setShowDefault(false);
         updateTooltips();
         hotbarIndex = 0;
@@ -220,6 +220,7 @@ public class HotbarLogic {
      * Save the hotbar state for the current world to json.
      */
     private void save() {
+        InventoryHelper.reorderInventoryHotbar();
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
             boolean found = false;

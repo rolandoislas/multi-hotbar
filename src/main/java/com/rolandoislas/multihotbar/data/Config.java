@@ -20,8 +20,7 @@ public class Config {
     public static Configuration config;
     public static boolean relativeHotbarKeys;
     public static boolean relativeHotbarPickups;
-    public static int[] inventoryOrder;
-    public static boolean useCustomInventory;
+    //public static int[] inventoryOrder;
     public static boolean stackedHotbars;
     public static boolean shiftChat;
 
@@ -42,15 +41,9 @@ public class Config {
         relativeHotbarPickups = config.getBoolean("Relative Hotbar Pickups", Configuration.CATEGORY_GENERAL, false,
                 "When enabled slots are filled starting with the currently selected hotbar. " +
                         "If disabled slots fill starting from the first hotbar.");
-        useCustomInventory = config.getBoolean("Custom Inventory", Configuration.CATEGORY_GENERAL,
-                true,
-                "If true the normal inventory screen will be replaced with a mostly identical screen that " +
-                        "allows rows to appear static and order to be customized.\n" +
-                        TextFormatting.RED + "[ALPHA]" + TextFormatting.RESET + "\n" +
-                        "Item drag and number hotkeys unsupported");
-        inventoryOrder = commaIntStringToArray(config.getString("Inventory Order", Configuration.CATEGORY_GENERAL,
+        /*inventoryOrder = commaIntStringToArray(config.getString("Inventory Order", Configuration.CATEGORY_GENERAL,
                 "0,1,2,3", "Sets the order of the inventory rows\n" +
-                        "Expects a no spaces, comma separated list with the values 0-3 each used once."));
+                        "Expects a no spaces, comma separated list with the values 0-3 each used once."));*/
         stackedHotbars = config.getBoolean("Stacked Hotbars", Configuration.CATEGORY_GENERAL, false,
                 "If true there will be only one hotbar per row.");
         shiftChat = config.getBoolean("Shift Chat", Configuration.CATEGORY_GENERAL, false,
@@ -81,7 +74,7 @@ public class Config {
         return intArray;
     }
 
-    public static void reload() {
+    private static void reload() {
         load();
         // Update index if the number of hotbars changes
         if (HotbarLogic.hotbarIndex >= numberOfHotbars)

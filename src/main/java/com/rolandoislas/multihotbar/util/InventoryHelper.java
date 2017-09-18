@@ -13,6 +13,11 @@ import net.minecraft.item.ItemStack;
  * Created by Rolando on 6/11/2016.
  */
 public class InventoryHelper {
+    private static int savedIndex;
+
+    static {
+        savedIndex = -1;
+    }
 
     /**
      * Swap hotbar items
@@ -21,6 +26,8 @@ public class InventoryHelper {
      */
     public static void swapHotbars(int firstIndex, int secondIndex) {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
+        if (player == null || firstIndex == secondIndex)
+            return;
         int firstSlotIndex = indexToSlot(firstIndex);
         int secondSlotIndex = indexToSlot(secondIndex);
         int firstSlotindex936 = indexToSlot936(firstIndex);
@@ -99,16 +106,32 @@ public class InventoryHelper {
     }
 
     /**
-     * Converts a normal slot to a slot based on the hotbar index
-     * @param slot normal slot 9-44
+     * Orders the inventory to the saved row order
      */
-    public static int normalSlotToHotbarOrderedSlot(int slot, boolean clickOffset) {
-        if (slot < 9 || slot > 44)
-            return slot;
-        slot = fullInventoryToMainInventory(slot);
-        int index = (int) Math.floor(slot / 9);
-        int hotbarIndex = HotbarLogic.hotbarOrder[Config.inventoryOrder[index]];
-        slot = indexToSlot(hotbarIndex) + slot % 9;
-        return clickOffset ? mainInventoryToFullInventory(slot) : slot;
+    public static void reorderInventoryHotbar() {
+        synchronized (InventoryHelper.class) {
+            if (savedIndex < 0)
+                return;
+            HotbarLogic.reset(false);
+            HotbarLogic.moveSelectionToHotbar(savedIndex);
+            savedIndex = -1;
+        }
+    }
+
+    /**
+     * Orders the inventory to the vanilla order
+     */
+    public static void reorderInventoryVanilla() {
+        synchronized (InventoryHelper.class) {
+            savedIndex = HotbarLogic.hotbarIndex;
+            for (int vanillaIndex = 0; vanillaIndex < Config.MAX_HOTBARS; vanillaIndex++) {
+                int slot = HotbarLogic.hotbarOrder[vanillaIndex];
+                swapHotbars(vanillaIndex, slot);
+                for (int newIndex = 0; newIndex < Config.MAX_HOTBARS; newIndex++)
+                    if (HotbarLogic.hotbarOrder[newIndex] == vanillaIndex)
+                        HotbarLogic.hotbarOrder[newIndex] = slot;
+                HotbarLogic.hotbarOrder[vanillaIndex] = vanillaIndex;
+            }
+        }
     }
 }
