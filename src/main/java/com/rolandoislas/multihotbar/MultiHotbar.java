@@ -6,6 +6,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = MultiHotbar.MODID, version = MultiHotbar.VERSION, name = MultiHotbar.NAME, acceptableRemoteVersions = "*",
@@ -25,6 +26,7 @@ public class MultiHotbar
             serverSide = "com.rolandoislas.multihotbar.proxy.CommonProxy")
     public static CommonProxy proxy;
     public static Logger logger;
+    public static SimpleNetworkWrapper networkChannel;
 
     @Mod.EventHandler
     @SuppressWarnings("unused")

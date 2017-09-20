@@ -15,13 +15,13 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
 ext.tag = System.getenv("TRAVIS_TAG")
-version = "1.12.1-3.1"
+version = "1.12.2-3.1"
 version =  version + "-build-T" + ext.build
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
 minecraft {
-    version = "1.12.1-14.22.1.2478"
+    version = "1.12.2-14.23.0.2486"
     runDir = "run"
     mappings = "snapshot_20170626"
 }

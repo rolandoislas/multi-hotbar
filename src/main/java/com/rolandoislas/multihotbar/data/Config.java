@@ -2,7 +2,6 @@ package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -23,6 +22,7 @@ public class Config {
     //public static int[] inventoryOrder;
     public static boolean stackedHotbars;
     public static boolean shiftChat;
+    private static String BASE_LANG = MultiHotbar.MODID + ".config.";
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -33,21 +33,30 @@ public class Config {
         }
         // Handle client config
         config.load();
+        // TODO add lang entries
+        config.setCategoryLanguageKey(Configuration.CATEGORY_GENERAL, BASE_LANG + "general");
         numberOfHotbars = config.getInt("Number of Hotbars", Configuration.CATEGORY_GENERAL, 2, 2, MAX_HOTBARS,
-                "Defines the amount of hotbars that should be displayed");
+                "Defines the amount of hotbars that should be displayed",
+                BASE_LANG + "general.numberofhotbars");
         relativeHotbarKeys = config.getBoolean("Relative Hotbar Keys", Configuration.CATEGORY_GENERAL, false,
                 "If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently " +
-                        "selected hotbar instead of the first");
+                        "selected hotbar instead of the first",
+                BASE_LANG + "general.relativehotbarkeys");
         relativeHotbarPickups = config.getBoolean("Relative Hotbar Pickups", Configuration.CATEGORY_GENERAL, false,
                 "When enabled slots are filled starting with the currently selected hotbar. " +
-                        "If disabled slots fill starting from the first hotbar.");
+                        "If disabled slots fill starting from the first hotbar.",
+                BASE_LANG + "general.relativehotbarpickups");
         /*inventoryOrder = commaIntStringToArray(config.getString("Inventory Order", Configuration.CATEGORY_GENERAL,
                 "0,1,2,3", "Sets the order of the inventory rows\n" +
-                        "Expects a no spaces, comma separated list with the values 0-3 each used once."));*/
+                        "Expects a no spaces, comma separated list with the values 0-3 each used once.",
+                BASE_LANG + "general.inventoryorder"));*/
         stackedHotbars = config.getBoolean("Stacked Hotbars", Configuration.CATEGORY_GENERAL, false,
-                "If true there will be only one hotbar per row.");
+                "If true there will be only one hotbar per row.",
+                BASE_LANG + "general.stackedhotbars");
         shiftChat = config.getBoolean("Shift Chat", Configuration.CATEGORY_GENERAL, false,
-                "Shifts chat up in the event there is more than one row of hotbars.");
+                "Shifts chat up in the event there is more than one row of hotbars.",
+                BASE_LANG + "general.shiftchat");
+
         config.save();
     }
 

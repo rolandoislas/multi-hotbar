@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import com.rolandoislas.multihotbar.data.Config;
 import com.rolandoislas.multihotbar.data.KeyBindings;
 import com.rolandoislas.multihotbar.data.WorldJson;
-import com.rolandoislas.multihotbar.util.InventoryHelper;
+import com.rolandoislas.multihotbar.util.InventoryHelperClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -130,7 +130,7 @@ public class HotbarLogic {
         hotbarIndex += forward ? 1 : -1; // Change hotbar
         hotbarIndex = hotbarIndex < 0 ? Config.numberOfHotbars - 1 : hotbarIndex; // Loop from first to last
         hotbarIndex = hotbarIndex >= Config.numberOfHotbars ? 0 : hotbarIndex; // Loop from last to first
-        InventoryHelper.swapHotbars(0, hotbarOrder[hotbarIndex]);
+        InventoryHelperClient.swapHotbars(0, hotbarOrder[hotbarIndex]);
         // save swapped position
         int orderFirst = hotbarOrder[previousIndex];
         hotbarOrder[previousIndex] = hotbarOrder[hotbarIndex];
@@ -220,7 +220,7 @@ public class HotbarLogic {
      * Save the hotbar state for the current world to json.
      */
     private void save() {
-        InventoryHelper.reorderInventoryHotbar();
+        InventoryHelperClient.reorderInventoryHotbar();
         String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
         try {
             boolean found = false;
@@ -441,9 +441,9 @@ public class HotbarLogic {
         }
         waitForItemTicks = 0;
         // Move the picked up item to the correct slot
-        int clickSlotFirst = InventoryHelper.mainInventoryToFullInventory(this.pickupSlot.get(0));
-        int clickSlotSecond = InventoryHelper.mainInventoryToFullInventory(getFirstEmptyStack());
-        InventoryHelper.swapSlot(clickSlotFirst, clickSlotSecond);
+        int clickSlotFirst = InventoryHelperClient.mainInventoryToFullInventory(this.pickupSlot.get(0));
+        int clickSlotSecond = InventoryHelperClient.mainInventoryToFullInventory(getFirstEmptyStack());
+        InventoryHelperClient.swapSlot(clickSlotFirst, clickSlotSecond);
         if (this.pickupSlot.size() > 0)
             this.pickupSlot.remove(0);
         pickupMutex.unlock();
