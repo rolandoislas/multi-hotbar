@@ -146,8 +146,8 @@ public class HotbarLogic {
             return;
         int previousIndex = hotbarIndex;
         hotbarIndex += forward ? 1 : -1; // Change hotbar
-        hotbarIndex = hotbarIndex < 0 ? Config.numberOfHotbars - 1 : hotbarIndex; // Loop from first to last
-        hotbarIndex = hotbarIndex >= Config.numberOfHotbars ? 0 : hotbarIndex; // Loop from last to first
+        hotbarIndex = hotbarIndex < 0 ? Config.MAX_HOTBARS - 1 : hotbarIndex; // Loop from first to last
+        hotbarIndex = hotbarIndex >= Config.MAX_HOTBARS ? 0 : hotbarIndex; // Loop from last to first
         InventoryHelperClient.swapHotbars(0, hotbarOrder[hotbarIndex]);
         // save swapped position
         int orderFirst = hotbarOrder[previousIndex];
