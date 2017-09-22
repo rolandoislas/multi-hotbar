@@ -1,17 +1,22 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.event;
 
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.network.FMLNetworkEvent;
+import com.rolandoislas.multihotbar.HotBarRenderer;
+import com.rolandoislas.multihotbar.HotbarLogic;
+import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.util.GuiUtil;
+import com.rolandoislas.multihotbar.util.InvTweaksHelper;
+import com.rolandoislas.multihotbar.util.InventoryHelperClient;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import org.lwjgl.opengl.GL11;
 
 /**
  * Created by Rolando on 6/6/2016.
@@ -78,7 +83,12 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void playerTick(TickEvent.PlayerTickEvent event) {
-        InventoryHelper.tick();
+        InventoryHelperClient.tick();
         hotbarLogic.playerTick(event);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void guiEvent(GuiOpenEvent event) {
+        GuiUtil.guiOpenEvent(event);
     }
 }

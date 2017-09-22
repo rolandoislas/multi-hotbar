@@ -1,6 +1,7 @@
-package com.rolandoislas.multihotbar;
+package com.rolandoislas.multihotbar.util;
 
 import cpw.mods.fml.common.Loader;
+import com.rolandoislas.multihotbar.data.Config;
 import invtweaks.InvTweaks;
 import org.apache.commons.io.IOUtils;
 

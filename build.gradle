@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.8"
+        classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.9"
     }
 }
 
@@ -15,7 +15,7 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
 ext.tag = System.getenv("TRAVIS_TAG")
-version = "1.7.10-2.1.2"
+version = "1.7.10-3.2"
 version =  version + "-build-T" + ext.build
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
@@ -23,6 +23,14 @@ archivesBaseName = "multihotbar"
 minecraft {
     version = "1.7.10-10.13.4.1558-1.7.10"
     runDir = "run"
+    //mappings = "stable_12"
+}
+
+jar {
+    manifest {
+        attributes 'FMLCorePlugin': 'com.rolandoislas.multihotbar.asm.FmlLoadingPlugin'
+        attributes 'FMLCorePluginContainsFMLMod': 'true'
+    }
 }
 
 if (ext.tag) {
@@ -32,20 +40,23 @@ if (ext.tag) {
         project {
             id = "246054"
             changelog = System.getenv("TRAVIS_COMMIT_MESSAGE") ?: ""
-            if (ext.tag.contains("alpha"))
-                releaseType = "alpha"
+            if (ext.tag.contains("release"))
+                releaseType = "release"
             else if (ext.tag.contains("beta"))
                 releaseType = "beta"
             else
-                releaseType = "release"
+                releaseType = "alpha"
             mainArtifact jar
+            relations {
+                optionalLibrary "inventory-tweaks"
+            }
         }
     }
 }
 
-sourceCompatibility = targetCompatibility = "1.6" // Need this here so eclipse task generates correctly.
+sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
 compileJava {
-    sourceCompatibility = targetCompatibility = "1.6"
+    sourceCompatibility = targetCompatibility = "1.8"
 }
 
 idea.module.inheritOutputDirs = true

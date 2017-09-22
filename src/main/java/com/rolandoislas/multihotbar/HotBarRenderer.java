@@ -1,5 +1,6 @@
 package com.rolandoislas.multihotbar;
 
+import com.rolandoislas.multihotbar.data.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -39,7 +40,11 @@ public class HotBarRenderer extends Gui {
         // Render
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
-        if (Config.numberOfHotbars == 1)
+        if (Config.stackedHotbars) {
+            for (int hotbar = 0; hotbar < Config.numberOfHotbars; hotbar++)
+                drawSingle(hotbar);
+        }
+        else if (Config.numberOfHotbars == 1)
             drawSingle(0);
         else if (Config.numberOfHotbars == 2)
             drawDouble(0);
@@ -59,6 +64,8 @@ public class HotBarRenderer extends Gui {
         if (tooltipTicks > 0)
             tooltipTicks--;
         int[] coords = getHotbarCoords(Config.numberOfHotbars >= 3 ? 2 : 0);
+        if (Config.stackedHotbars)
+            coords = getHotbarCoords(Config.numberOfHotbars - 1);
         ItemStack item = minecraft.thePlayer.inventory.getCurrentItem();
         if (item == null || tooltipTicks == 0)
             return;
@@ -81,13 +88,13 @@ public class HotBarRenderer extends Gui {
 
     private void drawItems() {
         for (int i = 0; i < Config.numberOfHotbars; i++)
-            drawItems(i, HotbarLogic.hotbarOrder[i]);
+            drawItems(i, HotbarLogic.hotbarOrder[Config.hotbarOrder[i]]);
     }
 
     private void drawSelection() {
         // Draw selection indicator
         int slot = minecraft.thePlayer.inventory.currentItem;
-        int index = HotbarLogic.hotbarIndex;
+        int index = Config.hotbarOrder[HotbarLogic.hotbarIndex];
         int[] coords = getHotbarCoords(index);
         int x = coords[0];
         int y = coords[1];
@@ -117,7 +124,7 @@ public class HotBarRenderer extends Gui {
         Minecraft minecraft = Minecraft.getMinecraft();
         ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
         int[] coords = new int[2];
-        if (Config.numberOfHotbars == 1) {
+        if (Config.stackedHotbars || Config.numberOfHotbars == 1) {
             coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
             coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
         }
@@ -195,12 +202,14 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.type)) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
             GL11.glPushMatrix();
-            GL11.glTranslatef(0, -22, 0);
+            int y = Config.stackedHotbars ? -HOTBAR_HEIGHT * (Config.numberOfHotbars - 1) : -HOTBAR_HEIGHT;
+            GL11.glTranslatef(0, y, 0);
         }
     }
 
@@ -209,7 +218,8 @@ public class HotBarRenderer extends Gui {
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.shouldShowDefault()) && Config.numberOfHotbars > 2 && isElementToShift(event.type)) {
+        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.type)) {
             renderPosted = true;
             GL11.glPopMatrix();
         }
@@ -220,7 +230,7 @@ public class HotBarRenderer extends Gui {
     }
 
     private boolean isElementToShift(RenderGameOverlayEvent.ElementType type) {
-        return type == RenderGameOverlayEvent.ElementType.CHAT ||
+        return (type.equals(RenderGameOverlayEvent.ElementType.CHAT) && Config.shiftChat) ||
                 type == RenderGameOverlayEvent.ElementType.HEALTH ||
                 type == RenderGameOverlayEvent.ElementType.AIR ||
                 type == RenderGameOverlayEvent.ElementType.ARMOR ||
