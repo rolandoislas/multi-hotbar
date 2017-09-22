@@ -1,7 +1,6 @@
 package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
-import com.rolandoislas.multihotbar.MultiHotbar;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -23,7 +22,7 @@ public class Config {
     public static int[] hotbarOrder;
     public static boolean stackedHotbars;
     public static boolean shiftChat;
-    private static final String BASE_LANG = MultiHotbar.MODID + ".config.";
+    private static final String BASE_LANG = Constants.MODID + ".config.";
     public static boolean singleHotbarMode;
     public static boolean singleHotbarModeShowOnModiferKey;
 
@@ -112,7 +111,7 @@ public class Config {
     }
 
     public static void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.getModID().equals(MultiHotbar.MODID)) {
+        if (event.getModID().equals(Constants.MODID)) {
             Config.config.save();
             Config.reload();
         }

@@ -1,5 +1,6 @@
 package com.rolandoislas.multihotbar.util;
 
+import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.data.Config;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,6 +13,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class InventoryHelperCommon {
+    private static EntityPlayer player;
+
     /**
      * Swap hotbar items
      * @param firstIndex index of first hotbar
@@ -114,5 +117,14 @@ public class InventoryHelperCommon {
                 out.append("\n");
         }
         MultiHotbar.logger.debug(out.toString());
+    }
+
+    /**
+     * Gets the current item that the player is holding, taking into account the swapped hotbar order
+     */
+    public static ItemStack getCurrentItem(EntityPlayer player) {
+        int hotbar = HotbarLogic.hotbarOrder[HotbarLogic.hotbarIndex];
+        return player.inventory.getStackInSlot(hotbar * InventoryPlayer.getHotbarSize() +
+                player.inventory.currentItem);
     }
 }
