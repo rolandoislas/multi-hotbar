@@ -1,7 +1,6 @@
 package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
-import com.rolandoislas.multihotbar.MultiHotbar;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -22,7 +21,7 @@ public class Config {
     //public static int[] inventoryOrder;
     public static boolean stackedHotbars;
     public static boolean shiftChat;
-    private static String BASE_LANG = MultiHotbar.MODID + ".config.";
+    private static final String BASE_LANG = Constants.MODID + ".config.";
 
     public static void load() {
         // Check if server and set hotbars to max
@@ -95,7 +94,7 @@ public class Config {
     }
 
     public static void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.getModID().equals(MultiHotbar.MODID)) {
+        if (event.getModID().equals(Constants.MODID)) {
             Config.config.save();
             Config.reload();
         }
