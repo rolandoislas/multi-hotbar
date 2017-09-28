@@ -13,6 +13,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class InventoryHelperCommon {
+    private static EntityPlayer player;
+
     /**
      * Swap hotbar items
      * @param firstIndex index of first hotbar
