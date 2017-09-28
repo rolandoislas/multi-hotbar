@@ -3,20 +3,14 @@ package com.rolandoislas.multihotbar.event;
 import com.rolandoislas.multihotbar.HotBarRenderer;
 import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.data.Config;
-import com.rolandoislas.multihotbar.gui.HotbarGuiChest;
-import com.rolandoislas.multihotbar.gui.HotbarGuiInventory;
 import com.rolandoislas.multihotbar.util.GuiUtil;
 import com.rolandoislas.multihotbar.util.InvTweaksHelper;
-import com.rolandoislas.multihotbar.util.InventoryHelper;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiChest;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraftforge.client.event.GuiScreenEvent;
+import com.rolandoislas.multihotbar.util.InventoryHelperClient;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -89,12 +83,12 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public void playerTick(TickEvent.PlayerTickEvent event) {
-        InventoryHelper.tick();
+        InventoryHelperClient.tick();
         hotbarLogic.playerTick(event);
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void guiEvent(GuiScreenEvent event) {
-        GuiUtil.guiEvent(event);
+    public void guiEvent(GuiOpenEvent event) {
+        GuiUtil.guiOpenEvent(event);
     }
 }
