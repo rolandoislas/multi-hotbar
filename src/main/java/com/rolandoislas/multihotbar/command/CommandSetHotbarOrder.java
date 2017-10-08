@@ -1,7 +1,7 @@
 package com.rolandoislas.multihotbar.command;
 
-import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
@@ -36,7 +36,7 @@ public class CommandSetHotbarOrder implements ICommand {
                 orderString.append(arg).append(",");
             if (orderString.length() > 0)
                 orderString.deleteCharAt(orderString.length() - 1);
-            HotbarLogic.hotbarOrder = Config.commaIntStringToArray(orderString.toString());
+            InventoryHelperCommon.hotbarOrder = Config.commaIntStringToArray(orderString.toString());
         }
         catch (IllegalArgumentException e) {
             throw new CommandException("Failed to parse order arguments");

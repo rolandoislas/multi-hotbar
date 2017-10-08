@@ -1,7 +1,7 @@
 package com.rolandoislas.multihotbar.command;
 
-import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
@@ -38,7 +38,7 @@ public class CommandSetHotbarIndex implements ICommand {
             int index = Integer.parseInt(args[0]);
             if (index < 0 || index >= Config.numberOfHotbars)
                 throw new CommandException("Index out of bounds");
-            HotbarLogic.hotbarIndex = index;
+            InventoryHelperCommon.hotbarIndex = index;
         }
         catch (NumberFormatException e) {
             throw new CommandException("Not a valid index");

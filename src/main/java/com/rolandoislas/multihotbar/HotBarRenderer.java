@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar;
 
 import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -118,13 +119,13 @@ public class HotBarRenderer extends Gui {
 
     private void drawItems() {
         for (int i = 0; i < Config.numberOfHotbars; i++)
-            drawItems(i, HotbarLogic.hotbarOrder[Config.hotbarOrder[i]]);
+            drawItems(i, InventoryHelperCommon.hotbarOrder[Config.hotbarOrder[i]]);
     }
 
     private void drawSelection() {
         // Draw selection indicator
         int slot = minecraft.player.inventory.currentItem;
-        int index = Config.hotbarOrder[HotbarLogic.hotbarIndex];
+        int index = Config.hotbarOrder[InventoryHelperCommon.hotbarIndex];
         int[] coords = getHotbarCoords(index);
         int x = coords[0];
         int y = coords[1];

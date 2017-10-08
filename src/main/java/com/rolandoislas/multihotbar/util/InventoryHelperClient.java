@@ -109,8 +109,8 @@ public class InventoryHelperClient {
      */
     static void reorderInventoryVanilla() {
         synchronized (InventoryHelperClient.class) {
-            savedIndex = HotbarLogic.hotbarIndex;
-            reorderInventory(HotbarLogic.hotbarOrder, new int[]{0, 1, 2, 3}, Minecraft.getMinecraft().player);
+            savedIndex = InventoryHelperCommon.hotbarIndex;
+            reorderInventory(InventoryHelperCommon.hotbarOrder, new int[]{0, 1, 2, 3}, Minecraft.getMinecraft().player);
         }
     }
 
@@ -126,8 +126,8 @@ public class InventoryHelperClient {
      * Send a reorder request to the server.
      */
     static void reorderInventoryVanillaContainer() {
-        MultiHotbar.networkChannel.sendToServer(new ReorderPacket(HotbarLogic.hotbarOrder, new int[] {0, 1, 2, 3},
-                HotbarLogic.hotbarIndex));
+        MultiHotbar.networkChannel.sendToServer(new ReorderPacket(InventoryHelperCommon.hotbarOrder, new int[] {0, 1, 2, 3},
+                InventoryHelperCommon.hotbarIndex));
     }
 
     /**

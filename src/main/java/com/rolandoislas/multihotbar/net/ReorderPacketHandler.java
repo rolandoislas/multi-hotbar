@@ -1,8 +1,8 @@
 package com.rolandoislas.multihotbar.net;
 
-import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.util.InventoryHelperClient;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import com.rolandoislas.multihotbar.util.InventoryHelperServer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
@@ -21,7 +21,7 @@ public class ReorderPacketHandler implements IMessageHandler<ReorderPacket, IMes
             MultiHotbar.networkChannel.sendTo(message, ctx.getServerHandler().player);
         }
         else {
-            HotbarLogic.hotbarOrder = message.getHotbarOrder();
+            InventoryHelperCommon.hotbarOrder = message.getHotbarOrder();
             InventoryHelperClient.setSavedIndex(message.getHotbarIndex());
         }
         return null;

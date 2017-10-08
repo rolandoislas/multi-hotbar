@@ -6,8 +6,8 @@ import com.rolandoislas.multihotbar.data.Config;
 import com.rolandoislas.multihotbar.data.KeyBindings;
 import com.rolandoislas.multihotbar.data.WorldJson;
 import com.rolandoislas.multihotbar.util.InventoryHelperClient;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -42,8 +42,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by Rolando on 6/7/2016.
  */
 public class HotbarLogic {
-    public static int hotbarIndex = 0;
-    public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
     private static boolean showDefault = false;
     private static WorldJson[] worldJsonArray;
     private String worldAddress;
@@ -93,7 +91,7 @@ public class HotbarLogic {
         if (event.getDwheel() != 0) {
             updateTooltips();
             // Handle hotbar selector scroll
-            EntityPlayerSP player = Minecraft.getMinecraft().player;
+            EntityPlayer player = Minecraft.getMinecraft().player;
             // Scrolled right
             if (event.getDwheel() < 0) {
                 if (KeyBindings.scrollModifier.isKeyDown())
@@ -129,7 +127,7 @@ public class HotbarLogic {
     private void moveSelectionToPreviousHotbar() {
         int currentIndex = 0;
         for (int index : Config.hotbarOrder) {
-            if (index == hotbarIndex)
+            if (index == InventoryHelperCommon.hotbarIndex)
                 break;
             currentIndex++;
         }
@@ -146,15 +144,15 @@ public class HotbarLogic {
     private static void moveSelection(boolean forward) {
         if (Config.numberOfHotbars == 1)
             return;
-        int previousIndex = hotbarIndex;
-        hotbarIndex += forward ? 1 : -1; // Change hotbar
-        hotbarIndex = hotbarIndex < 0 ? Config.MAX_HOTBARS - 1 : hotbarIndex; // Loop from first to last
-        hotbarIndex = hotbarIndex >= Config.MAX_HOTBARS ? 0 : hotbarIndex; // Loop from last to first
-        InventoryHelperClient.swapHotbars(0, hotbarOrder[hotbarIndex]);
+        int previousIndex = InventoryHelperCommon.hotbarIndex;
+        InventoryHelperCommon.hotbarIndex += forward ? 1 : -1; // Change hotbar
+        InventoryHelperCommon.hotbarIndex = InventoryHelperCommon.hotbarIndex < 0 ? Config.MAX_HOTBARS - 1 : InventoryHelperCommon.hotbarIndex; // Loop from first to last
+        InventoryHelperCommon.hotbarIndex = InventoryHelperCommon.hotbarIndex >= Config.MAX_HOTBARS ? 0 : InventoryHelperCommon.hotbarIndex; // Loop from last to first
+        InventoryHelperClient.swapHotbars(0, InventoryHelperCommon.hotbarOrder[InventoryHelperCommon.hotbarIndex]);
         // save swapped position
-        int orderFirst = hotbarOrder[previousIndex];
-        hotbarOrder[previousIndex] = hotbarOrder[hotbarIndex];
-        hotbarOrder[hotbarIndex] = orderFirst;
+        int orderFirst = InventoryHelperCommon.hotbarOrder[previousIndex];
+        InventoryHelperCommon.hotbarOrder[previousIndex] = InventoryHelperCommon.hotbarOrder[InventoryHelperCommon.hotbarIndex];
+        InventoryHelperCommon.hotbarOrder[InventoryHelperCommon.hotbarIndex] = orderFirst;
     }
 
     /**
@@ -163,7 +161,7 @@ public class HotbarLogic {
     private static void moveSelectionToNextHotbar() {
         int currentIndex = 0;
         for (int index : Config.hotbarOrder) {
-            if (index == hotbarIndex)
+            if (index == InventoryHelperCommon.hotbarIndex)
                 break;
             currentIndex++;
         }
@@ -232,7 +230,7 @@ public class HotbarLogic {
      * @param index hotbar index
      */
     public static void moveSelectionToHotbar(int index) {
-        while (hotbarIndex != index)
+        while (InventoryHelperCommon.hotbarIndex != index)
             moveSelection(true);
     }
 
@@ -243,9 +241,9 @@ public class HotbarLogic {
      */
     public static void reset(boolean resetCurrentItem) {
         updateTooltips();
-        hotbarIndex = 0;
+        InventoryHelperCommon.hotbarIndex = 0;
         for (int i = 0; i < Config.MAX_HOTBARS; i++)
-            hotbarOrder[i] = i;
+            InventoryHelperCommon.hotbarOrder[i] = i;
         try {
             if (resetCurrentItem)
                 Minecraft.getMinecraft().player.inventory.currentItem = 0;
@@ -272,8 +270,8 @@ public class HotbarLogic {
                 for (WorldJson worldJson : worldJsonArray) {
                     if (worldJson.getId().equals(getWorldId())) {
                         found = true;
-                        worldJson.setIndex(hotbarIndex);
-                        worldJson.setOrder(hotbarOrder);
+                        worldJson.setIndex(InventoryHelperCommon.hotbarIndex);
+                        worldJson.setOrder(InventoryHelperCommon.hotbarOrder);
                         break;
                     }
                 }
@@ -286,8 +284,8 @@ public class HotbarLogic {
                 int index = worldJsonArray.length - 1;
                 worldJsonArray[index] = new WorldJson();
                 worldJsonArray[index].setId(getWorldId());
-                worldJsonArray[index].setIndex(hotbarIndex);
-                worldJsonArray[index].setOrder(hotbarOrder);
+                worldJsonArray[index].setIndex(InventoryHelperCommon.hotbarIndex);
+                worldJsonArray[index].setOrder(InventoryHelperCommon.hotbarOrder);
             }
             Gson gson = new Gson();
             FileWriter writer = new FileWriter(path);
@@ -310,8 +308,8 @@ public class HotbarLogic {
                 for (WorldJson worldJson : worldJsonArray) {
                     if (worldJson.getId().equals(getWorldId())) {
                         reset(false);
-                        hotbarIndex = worldJson.getIndex();
-                        hotbarOrder = worldJson.getOrder();
+                        InventoryHelperCommon.hotbarIndex = worldJson.getIndex();
+                        InventoryHelperCommon.hotbarOrder = worldJson.getOrder();
                         break;
                     } else
                         reset();
@@ -367,7 +365,7 @@ public class HotbarLogic {
     private int getFirstEmptyStack() {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
-                int index = hotbarOrder[Config.hotbarOrder[i]] * 9 + j;
+                int index = InventoryHelperCommon.hotbarOrder[Config.hotbarOrder[i]] * 9 + j;
                 ItemStack stack = Minecraft.getMinecraft().player.inventory.getStackInSlot(index);
                 if (stack.isEmpty())
                     return index;
@@ -434,7 +432,7 @@ public class HotbarLogic {
     private int getFirstCompatibleStack(ItemStack itemStack) {
         for (int i = 0; i < Config.numberOfHotbars; i++) {
             for (int j = 0; j < 9; j++) {
-                int index = hotbarOrder[i] * 9 + j;
+                int index = InventoryHelperCommon.hotbarOrder[i] * 9 + j;
                 ItemStack stack = Minecraft.getMinecraft().player.inventory.getStackInSlot(index);
                 if (!stack.isEmpty() && stack.isStackable() && stack.isItemEqual(itemStack) &&
                         ItemStack.areItemStackTagsEqual(stack, itemStack) &&

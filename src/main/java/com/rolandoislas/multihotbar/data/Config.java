@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
+import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -102,7 +103,7 @@ public class Config {
     private static void reload() {
         load();
         // Update index if the number of hotbars changes
-        if (HotbarLogic.hotbarIndex >= numberOfHotbars)
+        if (InventoryHelperCommon.hotbarIndex >= numberOfHotbars)
             HotbarLogic.moveSelectionToHotbar(numberOfHotbars - 1);
     }
 
