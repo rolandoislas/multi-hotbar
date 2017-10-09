@@ -6,11 +6,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.UUID;
 
 public class InventoryHelperCommon {
     public static int hotbarIndex = 0;
@@ -23,13 +23,14 @@ public class InventoryHelperCommon {
      * @param helper class that controls swapping
      */
     static void swapHotbars(int firstIndex, int secondIndex, EntityPlayer player, Class<?> helper) {
-        Method swapSlot = null;
+        Method swapSlot;
         try {
             swapSlot = helper.getMethod("swapSlot", int.class, int.class, EntityPlayer.class);
         } catch (NoSuchMethodException e) {
             MultiHotbar.logger.error(e);
+            return;
         }
-        if (player == null || firstIndex == secondIndex || swapSlot == null)
+        if (player == null || firstIndex == secondIndex)
             return;
         int firstSlotIndex = indexToSlot(firstIndex);
         int secondSlotIndex = indexToSlot(secondIndex);
@@ -126,6 +127,13 @@ public class InventoryHelperCommon {
     @SuppressWarnings("unused")
     public static ItemStack getCurrentItem(InventoryPlayer inventory) {
         int hotbar = hotbarOrder[hotbarIndex];
+        InventoryHelperServer.PLAYER_MUTEX.acquireUninterruptibly();
+        UUID playerid = inventory.player.getUniqueID();
+        if (InventoryHelperServer.PLAYER_HOTBARS.containsKey(playerid)) {
+            InventoryHelperServer.PlayerHotbar playerHotbar = InventoryHelperServer.PLAYER_HOTBARS.get(playerid);
+            hotbar = playerHotbar.getHotbarOrder()[playerHotbar.getHotbarIndex()];
+        }
+        InventoryHelperServer.PLAYER_MUTEX.release();
         return inventory.getStackInSlot(hotbar * InventoryPlayer.getHotbarSize() + inventory.currentItem);
     }
 }

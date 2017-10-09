@@ -46,7 +46,7 @@ public class HotbarLogic {
     private static WorldJson[] worldJsonArray;
     private String worldAddress;
     private ArrayList<Integer> pickupSlot = new ArrayList<>();
-    private boolean isWorldLocal;
+    public static boolean isWorldLocal;
     private List<ItemStack> inventory;
     private static int inventoryReorderDelayTicks = 0;
     private int pickedUpAmountThisTick = 0;
