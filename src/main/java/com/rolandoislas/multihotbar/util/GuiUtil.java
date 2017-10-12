@@ -14,7 +14,7 @@ import java.util.Objects;
  * Created by Rolando on 3/7/2017.
  */
 public class GuiUtil {
-	private static GuiScreen keepOpen;
+	public static GuiScreen keepOpen;
 
 	/**
 	 * Check if the gui should be canceled and replaced with a custom one

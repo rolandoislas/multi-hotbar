@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar.net;
 
 import com.rolandoislas.multihotbar.MultiHotbar;
+import com.rolandoislas.multihotbar.util.GuiUtil;
 import com.rolandoislas.multihotbar.util.InventoryHelperClient;
 import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import com.rolandoislas.multihotbar.util.InventoryHelperServer;
@@ -33,6 +34,7 @@ public class ReorderPacketHandler implements IMessageHandler<ReorderPacket, IMes
         else {
             InventoryHelperCommon.hotbarOrder = message.getHotbarOrder();
             InventoryHelperClient.setSavedIndex(message.getHotbarIndex());
+            GuiUtil.keepOpen = null;
         }
         return null;
     }

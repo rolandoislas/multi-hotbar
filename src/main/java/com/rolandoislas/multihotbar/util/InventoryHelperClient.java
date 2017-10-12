@@ -4,9 +4,7 @@ import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.net.ReorderPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.ClickType;
 
 /**
@@ -44,25 +42,17 @@ public class InventoryHelperClient {
     public static void swapSlot(int firstSlot, int secondSlot, EntityPlayer player) {
         if (player == null)
             return;
-        if (player instanceof EntityPlayerSP) {
-            // Move items
-            int window = player.inventoryContainer.windowId;
-            try {
-                Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
-                Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
-                Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
-            } catch (IndexOutOfBoundsException ignore) {
-            }
-            HotbarLogic.ignoreSlot(fullInventoryToMainInventory(firstSlot));
-            HotbarLogic.ignoreSlot(fullInventoryToMainInventory(secondSlot));
-            // InvTweaks delay
-            InvTweaksHelper.addDelay();
-        }
-        else if (player instanceof EntityPlayerMP) {
-            player.inventoryContainer.slotClick(firstSlot, 0, ClickType.SWAP, player);
-            player.inventoryContainer.slotClick(secondSlot, 0, ClickType.SWAP, player);
-            player.inventoryContainer.slotClick(firstSlot, 0, ClickType.SWAP, player);
-        }
+        // Move items
+        int window = player.inventoryContainer.windowId;
+        try {
+            Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+            Minecraft.getMinecraft().playerController.windowClick(window, secondSlot, 0, ClickType.SWAP, player);
+            Minecraft.getMinecraft().playerController.windowClick(window, firstSlot, 0, ClickType.SWAP, player);
+        } catch (IndexOutOfBoundsException ignore) {}
+        HotbarLogic.ignoreSlot(fullInventoryToMainInventory(firstSlot));
+        HotbarLogic.ignoreSlot(fullInventoryToMainInventory(secondSlot));
+        // InvTweaks delay
+        InvTweaksHelper.addDelay();
     }
 
     /**

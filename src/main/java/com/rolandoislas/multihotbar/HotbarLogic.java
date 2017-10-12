@@ -9,8 +9,6 @@ import com.rolandoislas.multihotbar.util.InventoryHelperClient;
 import com.rolandoislas.multihotbar.util.InventoryHelperCommon;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiContainerCreative;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -378,7 +376,7 @@ public class HotbarLogic {
      * Determines if the picked up item needs to be reordered. If it does, it is put into the reorder queue.
      * @param event pickup event
      */
-    public void pickupEvent(EntityItemPickupEvent event) {
+    public synchronized void pickupEvent(EntityItemPickupEvent event) {
         if (shouldShowDefault() || Config.relativeHotbarPickups)
             return;
         // Ignore events for other players
@@ -397,11 +395,8 @@ public class HotbarLogic {
         }
         // Get the first empty stack
         slot = getFirstEmptyStackVanilla(pickedUpAmountThisTick);
-        // No space in inventory
-        if (slot < 0)
-            return;
-        // Does not need a move
-        if (slot == getFirstEmptyStack())
+        // No space in inventory || item is already in position
+        if (slot < 0 || slot == getFirstEmptyStack())
             return;
         pickupMutex.lock();
         this.pickupSlot.add(slot);
@@ -449,7 +444,7 @@ public class HotbarLogic {
      * Will wait a few ticks for item to appear in inventory.
      * After too many ticks top item in queue is removed.
      */
-    private void reorderPickedupItem() {
+    private synchronized void reorderPickedupItem() {
         pickupMutex.lock();
         if (shouldShowDefault() || Config.relativeHotbarPickups) {
             pickupMutex.unlock();
@@ -485,7 +480,12 @@ public class HotbarLogic {
         // Move the picked up item to the correct slot
         int clickSlotFirst = InventoryHelperClient.mainInventoryToFullInventory(this.pickupSlot.get(0));
         int clickSlotSecond = InventoryHelperClient.mainInventoryToFullInventory(getFirstEmptyStack());
-        InventoryHelperClient.swapSlot(clickSlotFirst, clickSlotSecond);
+        int size = 0;
+        for (ItemStack itemStack : player.inventory.mainInventory)
+            if (!itemStack.isEmpty())
+                size++;
+        if (size < player.inventory.mainInventory.size())
+            InventoryHelperClient.swapSlot(clickSlotFirst, clickSlotSecond);
         if (this.pickupSlot.size() > 0)
             this.pickupSlot.remove(0);
         pickupMutex.unlock();
@@ -556,14 +556,12 @@ public class HotbarLogic {
      * Item pickup event is not called when connected to remote servers.
      * Let the pickup event handler handle this when it can.
      */
-    private void checkItemPickedUp() {
+    private synchronized void checkItemPickedUp() {
         EntityPlayer player = Minecraft.getMinecraft().player;
         // Set the inventory
         if (inventory == null ||
-                // Ignore if inventory is open TODO check inventory movement better
-                Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
-                Minecraft.getMinecraft().currentScreen instanceof GuiContainer ||
-                Minecraft.getMinecraft().currentScreen instanceof GuiContainerCreative) {
+                // Ignore if inventory is open
+                Minecraft.getMinecraft().currentScreen instanceof GuiContainer) {
             inventory = new ArrayList<ItemStack>(player.inventory.mainInventory);
         }
         // Find the changed item
@@ -609,11 +607,8 @@ public class HotbarLogic {
                 // Remove from array lists
                 changed.remove(0);
                 changedSlot.remove(0);
+                player.inventory.setInventorySlotContents(slot, inventoryUntouched[slot]);
             }
-            // Add item back to inventory to emulate the event having already taking place and the tick handler will
-            // move it
-            for (int slot = 0; slot < inventoryUntouched.length; slot++)
-                player.inventory.mainInventory.set(slot, inventoryUntouched[slot]);
         }
         // Update cached inventory
         inventory = new ArrayList<ItemStack>(player.inventory.mainInventory);

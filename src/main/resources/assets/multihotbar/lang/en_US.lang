@@ -1,3 +1,5 @@
+# Controls
+
 key.multihotbar.category.main=Multi-Hotbar
 key.multihotbar.category.hotbarkeys=Multi-Hotbar Slots
 key.multihotbar.scrollModifier=Scroll Modifier
@@ -30,3 +32,22 @@ key.multihotbar.hotbarkey.33=Hotbar Slot 33
 key.multihotbar.hotbarkey.34=Hotbar Slot 34
 key.multihotbar.hotbarkey.35=Hotbar Slot 35
 key.multihotbar.hotbarkey.36=Hotbar Slot 36
+
+# Lang entries
+
+multihotbar.config.general.numberofhotbars=Number of Hotbars
+multihotbar.config.general.numberofhotbars.tooltip=Defines the amount of hotbars that should be displayed
+multihotbar.config.general.relativehotbarkeys=Relative Hotbar Keys
+multihotbar.config.general.relativehotbarkeys.tooltip=If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently selected hotbar instead of the first.
+multihotbar.config.general.relativehotbarpickups=Relative Hotbar Pickups
+multihotbar.config.general.relativehotbarpickups.tooltip=When enabled, slots are filled starting with the currently selected hotbar. If disabled, slots fill starting from the first hotbar.
+multihotbar.config.general.inventoryorder=Hotbar Order
+multihotbar.config.general.inventoryorder.tooltip=Sets the order of the hotbar\nExpects a comma separated list with the values 0-3 each used once\n§3[stacked: 0,3,2,1]§r
+multihotbar.config.general.stackedhotbars=Stacked Hotbars
+multihotbar.config.general.stackedhotbars.tooltip=If true, there will be only one hotbar per row.
+multihotbar.config.general.shiftchat=Shift Chat
+multihotbar.config.general.shiftchat.tooltip=Shifts chat up in the event there is more than one row of hotbars
+multihotbar.config.general.singleHotbarMode=Single Hotbar Mode
+multihotbar.config.general.singleHotbarMode.tooltip=Render a single hotbar while still allowing hotkeys to change hotbars.\nScrolling and multiple presses of a button are ignored.
+multihotbar.config.general.singleHotbarModeShowOnModiferKey=Single Hotbar Preview
+multihotbar.config.general.singleHotbarModeShowOnModiferKey.tooltip=Preview the full hotbar when the modifier key is held down.
