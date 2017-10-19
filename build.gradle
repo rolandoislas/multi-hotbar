@@ -15,23 +15,19 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
 ext.tag = System.getenv("TRAVIS_TAG")
-version = "1.12.2-3.2"
+version = "1.12.2-4.0"
 version =  version + "-build-T" + ext.build
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
 
 minecraft {
-    version = "1.12.2-14.23.0.2486"
+    version = "1.12.2-14.23.0.2491"
     runDir = "run"
     mappings = "snapshot_20170626"
+    replace("@VERSION@", project.version)
 }
 
-jar {
-    manifest {
-        attributes 'FMLCorePlugin': 'com.rolandoislas.multihotbar.asm.FmlLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
-    }
-}
+jar {}
 
 if (ext.tag) {
     curseforge {
@@ -48,6 +44,7 @@ if (ext.tag) {
                 releaseType = "alpha"
             mainArtifact jar
             relations {
+                requiredLibrary "multihotbarcore"
                 optionalLibrary "inventory-tweaks"
             }
         }

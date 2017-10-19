@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION, name = Constants.NAME, acceptableRemoteVersions = "*",
     guiFactory = "com.rolandoislas.multihotbar.gui.GuiFactory", canBeDeactivated = true,
-    acceptedMinecraftVersions = Constants.MC_VERSION)
+    acceptedMinecraftVersions = Constants.MC_VERSION, dependencies = "required-after:multihotbarcore")
 public class MultiHotbar
 {
     @Mod.Instance(Constants.MODID)
