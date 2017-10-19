@@ -44,7 +44,7 @@ if (ext.tag) {
                 releaseType = "alpha"
             mainArtifact jar
             relations {
-                requiredLibrary "multihotbarcore"
+                requiredLibrary "multi-hotbar-core"
                 optionalLibrary "inventory-tweaks"
             }
         }
