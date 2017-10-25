@@ -17,13 +17,15 @@ public class Config {
     public static final int MAX_HOTBARS = 4;
     private static final String BASE_LANG = Constants.MODID + ".config.";
     public static Configuration config;
-    public static int numberOfHotbars = 2;
-    public static boolean relativeHotbarKeys = false;
-    public static int[] hotbarOrder = new int[]{0, 1, 2, 3};
-    public static boolean stackedHotbars = false;
-    public static boolean shiftChat = false;
-    public static boolean singleHotbarMode = false;
-    public static boolean singleHotbarModeShowOnModiferKey = false;
+    public static int numberOfHotbars;
+    public static boolean relativeHotbarKeys;
+    public static Integer[] hotbarOrder;
+    public static boolean stackedHotbars;
+    public static boolean shiftChat;
+    public static boolean singleHotbarMode;
+    public static boolean singleHotbarModeShowOnModiferKey;
+    public static boolean inverseScrollDirection;
+    public static boolean doubleTapMovesToNextHotbar;
 
     /**
      * Loads the config from a file and stores the values in memory. It also re-saves the config, stripping out any
@@ -36,66 +38,82 @@ public class Config {
             numberOfHotbars = MAX_HOTBARS;
             return;
         }
-        // Handle client config
+        // Initial load
         config.load();
-        populateConfig();
-        // Delete the old config
+        populateConfig(true);
+        // Delete the old config and save a new one with the loaded values. This ensures that only used keys are stored.
         config.getConfigFile().delete();
         config = new Configuration(config.getConfigFile());
-        populateConfig();
-        // Save the new one
+        populateConfig(false);
         config.save();
+        // Load again with defaults. This makes sure the GuiConfig has the correct defaults.
+        config.load();
+        populateConfig(true);
     }
 
-    private static void populateConfig() {
+    private static void populateConfig(boolean defaults) {
         config.setCategoryLanguageKey(Configuration.CATEGORY_GENERAL, BASE_LANG + "general");
         numberOfHotbars = config.getInt(
                 "number_of_hotbars",
                 Configuration.CATEGORY_GENERAL,
-                numberOfHotbars, 2, MAX_HOTBARS,
+                defaults ? 2 : numberOfHotbars, 2, MAX_HOTBARS,
                 "",
                 BASE_LANG + "general.numberofhotbars");
         relativeHotbarKeys = config.getBoolean(
                 "relative_hotbar_keys",
                 Configuration.CATEGORY_GENERAL,
-                relativeHotbarKeys,
+                !defaults && relativeHotbarKeys,
                 "",
                 BASE_LANG + "general.relativehotbarkeys");
         try {
             hotbarOrder = commaIntStringToArray(config.getString(
                     "hotbar_order",
                     Configuration.CATEGORY_GENERAL,
-                    intArrayToString(hotbarOrder),
+                    defaults ? "0,1,2,3" : intArrayToString(hotbarOrder),
                     "",
                     BASE_LANG + "general.inventoryorder"));
         }
         catch (IllegalArgumentException e) {
-            hotbarOrder = new int[]{0, 1, 2, 3};
+            hotbarOrder = new Integer[]{0, 1, 2, 3};
         }
         stackedHotbars = config.getBoolean(
                 "stacked_hotbars",
                 Configuration.CATEGORY_GENERAL,
-                stackedHotbars,
+                !defaults && stackedHotbars,
                 "",
                 BASE_LANG + "general.stackedhotbars");
         shiftChat = config.getBoolean(
                 "shift_chat",
                 Configuration.CATEGORY_GENERAL,
-                shiftChat,
+                !defaults && shiftChat,
                 "",
                 BASE_LANG + "general.shiftchat");
         singleHotbarMode = config.getBoolean(
                 "single_hotbar_mode",
                 Configuration.CATEGORY_GENERAL,
-                singleHotbarMode,
+                !defaults && singleHotbarMode,
                 "",
                 BASE_LANG + "general.singleHotbarMode");
         singleHotbarModeShowOnModiferKey = config.getBoolean(
                 "single_hotbar_preview",
                 Configuration.CATEGORY_GENERAL,
-                singleHotbarModeShowOnModiferKey,
+                !defaults && singleHotbarModeShowOnModiferKey,
                 "",
                 BASE_LANG + "general.singleHotbarModeShowOnModiferKey");
+        inverseScrollDirection = config.getBoolean(
+                "inverse_scroll_direction",
+                Configuration.CATEGORY_GENERAL,
+                !defaults && inverseScrollDirection,
+                "",
+                BASE_LANG + "general.inverseScrollDirection"
+        );
+        doubleTapMovesToNextHotbar = config.getBoolean(
+                "double_tap_moves_to_next_hotbar",
+                Configuration.CATEGORY_GENERAL,
+                defaults || doubleTapMovesToNextHotbar,
+                "",
+                BASE_LANG + "general.doubleTapMovesToNextHotbar"
+        );
     }
 
     /**
@@ -103,7 +121,7 @@ public class Config {
      * @param array int array
      * @return string of array or empty string
      */
-    private static String intArrayToString(int[] array) {
+    private static String intArrayToString(Integer[] array) {
         if (array == null)
             return "";
         StringBuilder arrayString = new StringBuilder();
@@ -119,11 +137,11 @@ public class Config {
      * @return int array
      * @throws IllegalArgumentException the string was invalid
      */
-    private static int[] commaIntStringToArray(String string) throws IllegalArgumentException {
+    private static Integer[] commaIntStringToArray(String string) throws IllegalArgumentException {
         String[] split = string.replace(" ", "").split(",");
         if (split.length != 4)
             throw new IllegalArgumentException();
-        int[] intArray = new int[split.length];
+        Integer[] intArray = new Integer[split.length];
         for (int str = 0; str < split.length; str++) {
             try {
                 intArray[str] = Integer.parseInt(split[str]);
@@ -162,7 +180,7 @@ public class Config {
             load();
             // Update index if the number of hotbars changes
             if (Minecraft.getMinecraft().player.inventory.currentItem > HotbarLogic.getHotbarSize() - 1)
-                HotbarLogic.moveSelectionToHotbar(numberOfHotbars - 1);
+                Minecraft.getMinecraft().player.inventory.currentItem = 0;
         }
     }
 }

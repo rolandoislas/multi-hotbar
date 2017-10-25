@@ -35,7 +35,7 @@ public class KeyBindings {
         ClientRegistry.registerKeyBinding(previousHotbar);
 
         hotbarKeys = new ArrayList<>();
-        for (int slot = HotbarLogic.VANILLA_HOTBAR_SIZE + 1; slot < InventoryPlayer.getHotbarSize(); slot++) {
+        for (int slot = HotbarLogic.VANILLA_HOTBAR_SIZE + 1; slot <= InventoryPlayer.getHotbarSize(); slot++) {
             hotbarKeys.add(new KeyBinding(
                     getDescription("hotbarkey." + slot),
                     Keyboard.KEY_NONE, CATEGORY_HOTBAR_KEYS));

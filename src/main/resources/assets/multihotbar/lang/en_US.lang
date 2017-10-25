@@ -34,7 +34,7 @@ key.multihotbar.hotbarkey.34=Hotbar Slot 34
 key.multihotbar.hotbarkey.35=Hotbar Slot 35
 key.multihotbar.hotbarkey.36=Hotbar Slot 36
 
-# Lang entries
+# Config
 
 multihotbar.config.general.numberofhotbars=Number of Hotbars
 multihotbar.config.general.numberofhotbars.tooltip=Defines the amount of hotbars that should be displayed
@@ -50,3 +50,11 @@ multihotbar.config.general.singleHotbarMode=Single Hotbar Mode
 multihotbar.config.general.singleHotbarMode.tooltip=Render a single hotbar while still allowing hotkeys to change hotbars.\nScrolling and multiple presses of a button are ignored.
 multihotbar.config.general.singleHotbarModeShowOnModiferKey=Single Hotbar Preview
 multihotbar.config.general.singleHotbarModeShowOnModiferKey.tooltip=Preview the full hotbar when the modifier key is held down.
+multihotbar.config.general.inverseScrollDirection=Invert Scroll Direction
+multihotbar.config.general.inverseScrollDirection.tooltip=If enabled, all actions that change the hotbar index (e.g. scroll, double tap hotbar key) will be reversed.
+multihotbar.config.general.doubleTapMovesToNextHotbar=Enable Double Tap
+multihotbar.config.general.doubleTapMovesToNextHotbar.tooltip=If enabled, tapping one of the first nine hotbar keys when the current selection matches the key index (e.g. tapping one when the first slot on a hotbar is selected) will move to the next hotbar.
+
+# Messages
+
+multihotbar.message.core_mod_missing=[Multi-Hotbar] Multi-Hotbar Core is not installed on the currently connected server. All Multi-Hotbar functions will be disabled.

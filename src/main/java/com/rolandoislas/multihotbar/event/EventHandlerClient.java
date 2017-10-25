@@ -2,7 +2,6 @@ package com.rolandoislas.multihotbar.event;
 
 import com.rolandoislas.multihotbar.HotBarRenderer;
 import com.rolandoislas.multihotbar.HotbarLogic;
-import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.data.Config;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -10,6 +9,7 @@ import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 /**
@@ -55,16 +55,13 @@ public class EventHandlerClient {
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        if (event.getConnectionType().equals("VANILLA")) {
-            MultiHotbar.logger.warn("Connecting to vanilla server. Multi-Hotbar 4+ currently does not support " +
-                    "vanilla servers. Please consider downgrading to a version 3 release.");
-            HotbarLogic.setShowDefault(true);
-        }
+    public void disconnectFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        HotbarLogic.setHasCoreMod(false);
+        HotbarLogic.setSentPlayerMessage(false);
     }
 
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void disconnectFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
-        HotbarLogic.setShowDefault(false);
+    @SubscribeEvent(priority =  EventPriority.NORMAL)
+    public void playerTick(TickEvent.PlayerTickEvent event) {
+        HotbarLogic.sendPlayerMessage(event);
     }
 }
