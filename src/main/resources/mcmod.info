@@ -11,6 +11,6 @@
   "credits": "Forge, Mojang, and all the orphans.",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": []
+  "dependencies": ["multihotbarcore"]
 }
 ]
