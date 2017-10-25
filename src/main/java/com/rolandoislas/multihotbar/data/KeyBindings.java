@@ -1,10 +1,15 @@
 package com.rolandoislas.multihotbar.data;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
+import com.rolandoislas.multihotbar.HotbarLogic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.input.Keyboard;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Rolando on 6/10/2016.
@@ -16,7 +21,7 @@ public class KeyBindings {
     public static KeyBinding scrollModifier;
     public static KeyBinding showDefaultHotbar;
     public static KeyBinding nextHotbar;
-    private static KeyBinding[] hotbarKeys;
+    private static List<KeyBinding> hotbarKeys;
     public static KeyBinding previousHotbar;
 
     public static void load() {
@@ -29,15 +34,12 @@ public class KeyBindings {
         ClientRegistry.registerKeyBinding(nextHotbar);
         ClientRegistry.registerKeyBinding(previousHotbar);
 
-        hotbarKeys = new KeyBinding[(Config.MAX_HOTBARS - 1) * InventoryPlayer.getHotbarSize()];
-        for (int hotbar = 0; hotbar < Config.MAX_HOTBARS - 1; hotbar++) {
-            for (int slot = 0; slot < InventoryPlayer.getHotbarSize(); slot++) {
-                int key = hotbar * InventoryPlayer.getHotbarSize() + slot;
-                hotbarKeys[key] = new KeyBinding(
-                        getDescription("hotbarkey." + (key + InventoryPlayer.getHotbarSize() + 1)),
-                        Keyboard.KEY_NONE, CATEGORY_HOTBAR_KEYS);
-                ClientRegistry.registerKeyBinding(hotbarKeys[key]);
-            }
+        hotbarKeys = new ArrayList<>();
+        for (int slot = HotbarLogic.VANILLA_HOTBAR_SIZE + 1; slot <= InventoryPlayer.getHotbarSize(); slot++) {
+            hotbarKeys.add(new KeyBinding(
+                    getDescription("hotbarkey." + slot),
+                    Keyboard.KEY_NONE, CATEGORY_HOTBAR_KEYS));
+            ClientRegistry.registerKeyBinding(hotbarKeys.get(hotbarKeys.size() - 1));
         }
     }
 
@@ -46,15 +48,12 @@ public class KeyBindings {
     }
 
     public static int isHotbarKeyDown() {
-        KeyBinding[] bindings = new KeyBinding[Minecraft.getMinecraft().gameSettings.keyBindsHotbar.length +
-                hotbarKeys.length];
-        System.arraycopy(Minecraft.getMinecraft().gameSettings.keyBindsHotbar, 0, bindings, 0,
-                Minecraft.getMinecraft().gameSettings.keyBindsHotbar.length);
-        System.arraycopy(hotbarKeys, 0, bindings, Minecraft.getMinecraft().gameSettings.keyBindsHotbar.length,
-                hotbarKeys.length);
-        for (int i = 0; i < bindings.length; i++)
-            if (bindings[i].isPressed())
-                return i;
+        List<KeyBinding> bindings = new ArrayList<>();
+        Collections.addAll(bindings, Minecraft.getMinecraft().gameSettings.keyBindsHotbar);
+        bindings.addAll(hotbarKeys);
+        for (KeyBinding keyBinding : bindings)
+            if (keyBinding.isPressed())
+                return bindings.indexOf(keyBinding);
         return -1;
     }
 }

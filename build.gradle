@@ -15,7 +15,7 @@ apply plugin: "com.matthewprenger.cursegradle"
 
 ext.build = System.getenv('TRAVIS_BUILD_NUMBER')
 ext.tag = System.getenv("TRAVIS_TAG")
-version = "1.7.10-3.2"
+version = "1.7.10-4.0"
 version =  version + "-build-T" + ext.build
 group= "com.rolandoislas.multihotbar" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "multihotbar"
@@ -23,15 +23,10 @@ archivesBaseName = "multihotbar"
 minecraft {
     version = "1.7.10-10.13.4.1558-1.7.10"
     runDir = "run"
-    //mappings = "stable_12"
+    replace("@VERSION@", project.version)
 }
 
-jar {
-    manifest {
-        attributes 'FMLCorePlugin': 'com.rolandoislas.multihotbar.asm.FmlLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
-    }
-}
+jar {}
 
 if (ext.tag) {
     curseforge {
@@ -48,6 +43,7 @@ if (ext.tag) {
                 releaseType = "alpha"
             mainArtifact jar
             relations {
+                requiredLibrary "multi-hotbar-core"
                 optionalLibrary "inventory-tweaks"
             }
         }
@@ -82,6 +78,5 @@ processResources
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
-        exclude 'invtweaks_at.cfg'
     }
 }

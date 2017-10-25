@@ -33,18 +33,17 @@ public class HotBarRenderer extends Gui {
 
     public void render(RenderGameOverlayEvent event) {
         // Check if hotbar should render
-        if (!(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable() &&
-                !HotbarLogic.shouldShowDefault()))
+        if (!(event.type.equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()))
             return;
         event.setCanceled(true);
         // Render
         GL11.glColor4f(1, 1, 1, 1);
         GL11.glDisable(GL11.GL_LIGHTING);
-        if (Config.stackedHotbars) {
+        if (Config.stackedHotbars && !HotbarLogic.shouldShowDefault()) {
             for (int hotbar = 0; hotbar < Config.numberOfHotbars; hotbar++)
                 drawSingle(hotbar);
         }
-        else if (Config.numberOfHotbars == 1)
+        else if (Config.numberOfHotbars == 1 || HotbarLogic.shouldShowDefault())
             drawSingle(0);
         else if (Config.numberOfHotbars == 2)
             drawDouble(0);
@@ -87,14 +86,18 @@ public class HotBarRenderer extends Gui {
     }
 
     private void drawItems() {
+        if (HotbarLogic.shouldShowDefault()) {
+            drawItems(0, HotbarLogic.getCurrentHotbar());
+            return;
+        }
         for (int i = 0; i < Config.numberOfHotbars; i++)
-            drawItems(i, HotbarLogic.hotbarOrder[Config.hotbarOrder[i]]);
+            drawItems(i, Config.hotbarOrder[i]);
     }
 
     private void drawSelection() {
         // Draw selection indicator
-        int slot = minecraft.thePlayer.inventory.currentItem;
-        int index = Config.hotbarOrder[HotbarLogic.hotbarIndex];
+        int index = Config.hotbarOrder[HotbarLogic.getCurrentHotbar() % 4];
+        int slot = minecraft.thePlayer.inventory.currentItem % 9;
         int[] coords = getHotbarCoords(index);
         int x = coords[0];
         int y = coords[1];
@@ -124,7 +127,11 @@ public class HotBarRenderer extends Gui {
         Minecraft minecraft = Minecraft.getMinecraft();
         ScaledResolution scaledResolution = new ScaledResolution(minecraft, minecraft.displayWidth, minecraft.displayHeight);
         int[] coords = new int[2];
-        if (Config.stackedHotbars || Config.numberOfHotbars == 1) {
+        if (HotbarLogic.shouldShowDefault()) {
+            coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
+            coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT;
+        }
+        else if (Config.stackedHotbars || Config.numberOfHotbars == 1) {
             coords[0] = scaledResolution.getScaledWidth() / 2 - HOTBAR_WIDTH / 2;
             coords[1] = scaledResolution.getScaledHeight() - HOTBAR_HEIGHT * (index + 1);
         }
@@ -202,8 +209,8 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
-                && isElementToShift(event.type)) {
+        if ((Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.type) && !HotbarLogic.shouldShowDefault()) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -218,8 +225,8 @@ public class HotBarRenderer extends Gui {
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((!HotbarLogic.shouldShowDefault()) && (Config.numberOfHotbars > 2 || Config.stackedHotbars)
-                && isElementToShift(event.type)) {
+        if ((Config.numberOfHotbars > 2 || Config.stackedHotbars)
+                && isElementToShift(event.type) && !HotbarLogic.shouldShowDefault()) {
             renderPosted = true;
             GL11.glPopMatrix();
         }

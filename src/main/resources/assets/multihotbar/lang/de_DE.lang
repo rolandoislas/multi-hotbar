@@ -1,0 +1,54 @@
+# Controls
+
+key.multihotbar.category.main=Multi-Hotbar
+# key.multihotbar.category.hotbarkeys=Multi-Hotbar Slots
+key.multihotbar.scrollModifier=Scroll-Modifikator
+key.multihotbar.showDefaultHotbar=Zeige Standardschnellzugriffsleiste
+# key.multihotbar.nextHotbar=Next Hotbar
+# key.multihotbar.previousHotbar=Previous Hotbar
+key.multihotbar.hotbarkey.10=Schnellzugriff 10
+key.multihotbar.hotbarkey.11=Schnellzugriff 11
+key.multihotbar.hotbarkey.12=Schnellzugriff 12
+key.multihotbar.hotbarkey.13=Schnellzugriff 13
+key.multihotbar.hotbarkey.14=Schnellzugriff 14
+key.multihotbar.hotbarkey.15=Schnellzugriff 15
+key.multihotbar.hotbarkey.16=Schnellzugriff 16
+key.multihotbar.hotbarkey.17=Schnellzugriff 17
+key.multihotbar.hotbarkey.18=Schnellzugriff 18
+key.multihotbar.hotbarkey.19=Schnellzugriff 19
+key.multihotbar.hotbarkey.20=Schnellzugriff 20
+key.multihotbar.hotbarkey.21=Schnellzugriff 21
+key.multihotbar.hotbarkey.22=Schnellzugriff 22
+key.multihotbar.hotbarkey.23=Schnellzugriff 23
+key.multihotbar.hotbarkey.24=Schnellzugriff 24
+key.multihotbar.hotbarkey.25=Schnellzugriff 25
+key.multihotbar.hotbarkey.26=Schnellzugriff 26
+key.multihotbar.hotbarkey.27=Schnellzugriff 27
+key.multihotbar.hotbarkey.28=Schnellzugriff 28
+key.multihotbar.hotbarkey.29=Schnellzugriff 29
+key.multihotbar.hotbarkey.30=Schnellzugriff 30
+key.multihotbar.hotbarkey.31=Schnellzugriff 31
+key.multihotbar.hotbarkey.32=Schnellzugriff 32
+key.multihotbar.hotbarkey.33=Schnellzugriff 33
+key.multihotbar.hotbarkey.34=Schnellzugriff 34
+key.multihotbar.hotbarkey.35=Schnellzugriff 35
+key.multihotbar.hotbarkey.36=Schnellzugriff 36
+
+# Config
+
+# multihotbar.config.general.numberofhotbars=Number of Hotbars
+# multihotbar.config.general.numberofhotbars.tooltip=Defines the amount of hotbars that should be displayed
+# multihotbar.config.general.relativehotbarkeys=Relative Hotbar Keys
+# multihotbar.config.general.relativehotbarkeys.tooltip=If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently selected hotbar instead of the first.
+# multihotbar.config.general.inventoryorder=Hotbar Order
+# multihotbar.config.general.inventoryorder.tooltip=Sets the order of the hotbar\nExpects a comma separated list with the values 0-3 each used once\n§3[stacked: 0,3,2,1]§r
+# multihotbar.config.general.stackedhotbars=Stacked Hotbars
+# multihotbar.config.general.stackedhotbars.tooltip=If true, there will be only one hotbar per row.
+# multihotbar.config.general.shiftchat=Shift Chat
+# multihotbar.config.general.shiftchat.tooltip=Shifts chat up in the event there is more than one row of hotbars
+# multihotbar.config.general.singleHotbarMode=Single Hotbar Mode
+# multihotbar.config.general.singleHotbarMode.tooltip=Render a single hotbar while still allowing hotkeys to change hotbars.\nScrolling and multiple presses of a button are ignored.
+# multihotbar.config.general.singleHotbarModeShowOnModiferKey=Single Hotbar Preview
+# multihotbar.config.general.singleHotbarModeShowOnModiferKey.tooltip=Preview the full hotbar when the modifier key is held down.
+# multihotbar.config.general.inverseScrollDirection=Inverse Scroll Direction
+# multihotbar.config.general.inverseScrollDirection.tooltip=If enabled, all actions that change the hotbar index (e.g. scroll, double tap hotbar key) will be reversed.

@@ -8,12 +8,16 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.network.NetworkCheckHandler;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import cpw.mods.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Constants.MODID, version = Constants.VERSION, name = Constants.NAME, acceptableRemoteVersions = "*",
+import java.util.Map;
+
+@Mod(modid = Constants.MODID, version = Constants.VERSION, name = Constants.NAME,
     guiFactory = "com.rolandoislas.multihotbar.gui.GuiFactory", canBeDeactivated = true,
-    acceptedMinecraftVersions = Constants.MC_VERSION)
+    acceptedMinecraftVersions = Constants.MC_VERSION, dependencies = "required-after:multihotbarcore")
 public class MultiHotbar
 {
     @Mod.Instance(Constants.MODID)
@@ -42,5 +46,17 @@ public class MultiHotbar
     @SuppressWarnings("unused")
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);
+    }
+
+    @SuppressWarnings("unused")
+    @NetworkCheckHandler
+    public boolean networkCheck(Map<String, String> mods, Side side) {
+        boolean hasCore = false;
+        for (String mod : mods.keySet())
+            if (mod.equals("multihotbarcore"))
+                hasCore = true;
+        HotbarLogic.setHasCoreMod(hasCore);
+        HotbarLogic.setSentPlayerMessage(false);
+        return true;
     }
 }
