@@ -1,83 +1,70 @@
 package com.rolandoislas.multihotbar;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
 import com.rolandoislas.multihotbar.data.Config;
+import com.rolandoislas.multihotbar.data.Constants;
 import com.rolandoislas.multihotbar.data.KeyBindings;
-import com.rolandoislas.multihotbar.data.WorldJson;
-import com.rolandoislas.multihotbar.util.InventoryHelperClient;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiContainerCreative;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.client.event.MouseEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Rolando on 6/7/2016.
  */
 public class HotbarLogic {
-    public static int hotbarIndex = 0;
-    public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
-    private static boolean showDefault = false;
-    private static WorldJson[] worldJsonArray;
-    private String worldAddress;
-    private ArrayList<Integer> pickupSlot = new ArrayList<>();
-    private boolean isWorldLocal;
-    private ItemStack[] inventory;
-    private static int inventoryReorderDelayTicks = 0;
-    private int pickedUpAmountThisTick = 0;
-    private int waitForItemTicks = 0;
-    private static ConcurrentHashMap<Integer, Integer> ignoreSlots = new ConcurrentHashMap<>();
-    private static Lock pickupMutex = new ReentrantLock();
+    private static boolean showDefaultToggle;
+    public static final int VANILLA_HOTBAR_SIZE = 9;
+    private static boolean hasCoreMod;
+    private static boolean sentPlayerMessage;
 
     /**
-     * Checks if the custom hotbar should be shown
+     * Checks if the custom hotbar should be shown.
+     * Takes other variables into account.
      * @return boolean
      */
     static boolean shouldShowDefault() {
         boolean isSpectator = Minecraft.getMinecraft().thePlayer != null &&
                 Minecraft.getMinecraft().thePlayer.isSpectator();
         boolean modifierEnabled = KeyBindings.scrollModifier.isKeyDown() && Config.singleHotbarModeShowOnModiferKey;
-        return getShowDefault() || isSpectator || (!modifierEnabled && Config.singleHotbarMode);
+        return getShowDefaultToggle() || isSpectator || (!modifierEnabled && Config.singleHotbarMode) || !hasCoreMod;
     }
 
     /**
-     * Set the state of the hotbar.
-     * @param showDefault should the normal hotbar be shown
+     * Set the state of the vanilla hotbar visibility user toggle
+     * @param showDefaultToggle should the normal hotbar be shown
      */
-    private static void setShowDefault(boolean showDefault) {
-        HotbarLogic.showDefault = showDefault;
+    private static void setShowDefaultToggle(boolean showDefaultToggle) {
+        if (showDefaultToggle)
+            Minecraft.getMinecraft().thePlayer.inventory.currentItem = 0;
+        HotbarLogic.showDefaultToggle = showDefaultToggle;
     }
 
     /**
-     * Get the state of the vanilla hotbar visibility
+     * Get the state of the vanilla hotbar visibility user toggle
+     * This does not take any other variable into account.
      */
-    private static boolean getShowDefault() {
-        return showDefault;
+    private static boolean getShowDefaultToggle() {
+        return showDefaultToggle;
+    }
+
+    /**
+     * Sets the missing core mod variable
+     * @param hasCoreMod if the core mod is installed on the server
+     */
+    public static void setHasCoreMod(boolean hasCoreMod) {
+        HotbarLogic.hasCoreMod = hasCoreMod;
+    }
+
+    /**
+     * Set weather or not the player has been sent a message.
+     * @param sentPlayerMessage has the player been sent a message
+     */
+    public static void setSentPlayerMessage(boolean sentPlayerMessage) {
+        HotbarLogic.sentPlayerMessage = sentPlayerMessage;
     }
 
     /**
@@ -85,36 +72,50 @@ public class HotbarLogic {
      * @param event mouse event
      */
     public void mouseEvent(MouseEvent event) {
-        if ((HotbarLogic.shouldShowDefault() && !Config.singleHotbarMode) || HotbarLogic.getShowDefault())
+        if (!hasCoreMod || getShowDefaultToggle())
             return;
         // Scrolled
         if (event.getDwheel() != 0) {
             updateTooltips();
             // Handle hotbar selector scroll
-            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+            // Calculate next/previous hotbar
+            int nextHotbar = getNextHotbarWithCustomOrder();
+            int previousHotbar = getPreviousHotbarWithCustomOrder();
             // Scrolled right
             if (event.getDwheel() < 0) {
+                // Modifier button is pressed. Move to next hotbar
                 if (KeyBindings.scrollModifier.isKeyDown())
                     moveSelectionToNextHotbar();
-                else if (player.inventory.currentItem < InventoryPlayer.getHotbarSize() - 1)
-                    player.inventory.currentItem++;
-                else {
-                    player.inventory.currentItem = 0;
-                    if (!HotbarLogic.shouldShowDefault())
-                        moveSelectionToNextHotbar();
+                // The end of the current hotbar has been reached. Move to the beginning of the next one.
+                else if (player.inventory.currentItem % VANILLA_HOTBAR_SIZE == VANILLA_HOTBAR_SIZE - 1) {
+                    if (!shouldShowDefault())
+                        player.inventory.currentItem = (Config.inverseScrollDirection ? previousHotbar : nextHotbar) *
+                                VANILLA_HOTBAR_SIZE;
+                    else
+                        player.inventory.currentItem = getCurrentHotbar() * VANILLA_HOTBAR_SIZE;
                 }
+                // Move to next item
+                else
+                   player.inventory.currentItem++;
             }
             // Scrolled left
             else {
+                // Modifier is pressed. Move to previous hotbar.
                 if (KeyBindings.scrollModifier.isKeyDown())
                     moveSelectionToPreviousHotbar();
-                else if (player.inventory.currentItem > 0)
-                    player.inventory.currentItem--;
-                else {
-                    player.inventory.currentItem = InventoryPlayer.getHotbarSize() - 1;
-                    if (!HotbarLogic.shouldShowDefault())
-                        moveSelectionToPreviousHotbar();
+                // The beginning of the current hotbar has been reached. Move to the end of the previous one.
+                else if (player.inventory.currentItem % 9 == 0) {
+                    if (!shouldShowDefault())
+                        player.inventory.currentItem = (Config.inverseScrollDirection ? nextHotbar : previousHotbar) *
+                                VANILLA_HOTBAR_SIZE + VANILLA_HOTBAR_SIZE - 1;
+                    else
+                        player.inventory.currentItem = getCurrentHotbar() * VANILLA_HOTBAR_SIZE +
+                                VANILLA_HOTBAR_SIZE - 1;
                 }
+                // Move to previous item
+                else
+                    player.inventory.currentItem--;
             }
             event.setCanceled(true);
             resetTooltipTicks();
@@ -122,53 +123,101 @@ public class HotbarLogic {
     }
 
     /**
-     * Go to previous hotbar keeping currently selected item. Loops to last hotbar.
+     * Get the previous hotbar based on the custom order
+     * @return hotbar index
      */
-    private void moveSelectionToPreviousHotbar() {
-        int currentIndex = 0;
-        for (int index : Config.hotbarOrder) {
-            if (index == hotbarIndex)
-                break;
-            currentIndex++;
-        }
-        int newIndex = currentIndex - 1;
-        if (currentIndex == 0)
-            newIndex = Config.numberOfHotbars - 1;
-        moveSelectionToHotbar(Config.hotbarOrder[newIndex]);
+    private static int getPreviousHotbarWithCustomOrder() {
+        int currentHotbar =getCurrentHotbarWithCustomOrder();
+        return currentHotbar == 0 ?
+                Config.hotbarOrder[Config.numberOfHotbars - 1] :
+                Config.hotbarOrder[currentHotbar - 1];
     }
 
     /**
-     * Move to adjacent hotbar. Loops to first or last hotbar.
-     * @param forward move forward instead of backward
+     * Get the next hotbar based on the custom order
+     * @return hotbar index
      */
-    private static void moveSelection(boolean forward) {
-        if (Config.numberOfHotbars == 1)
+    private static int getNextHotbarWithCustomOrder() {
+        int currentHotbar = getCurrentHotbarWithCustomOrder();
+        return currentHotbar >= Config.numberOfHotbars - 1 ?
+                Config.hotbarOrder[0] :
+                Config.hotbarOrder[currentHotbar + 1];
+    }
+
+    /**
+     * Get the current hotbar index based on the custom order.
+     * @return custom order index
+     */
+    private static int getCurrentHotbarWithCustomOrder() {
+        int currentHotbar = 0;
+        for (int order : Config.hotbarOrder) {
+            if (order == getCurrentHotbar())
+                break;
+            currentHotbar++;
+        }
+        return currentHotbar;
+    }
+
+    /**
+     * Returns the hotbar size based on the current amount of visible hotbars
+     * @return size
+     */
+    public static int getHotbarSize() {
+        if (shouldShowDefault())
+            return VANILLA_HOTBAR_SIZE;
+        return Config.numberOfHotbars * VANILLA_HOTBAR_SIZE;
+    }
+
+    /**
+     * Go to previous hotbar keeping currently selected item. Loops to last hotbar.
+     * @param force ignore the inverse config option
+     */
+    private static void moveSelectionToPreviousHotbar(boolean force) {
+        if (Config.inverseScrollDirection && !force) {
+            moveSelectionToNextHotbar(true);
             return;
-        int previousIndex = hotbarIndex;
-        hotbarIndex += forward ? 1 : -1; // Change hotbar
-        hotbarIndex = hotbarIndex < 0 ? Config.MAX_HOTBARS - 1 : hotbarIndex; // Loop from first to last
-        hotbarIndex = hotbarIndex >= Config.MAX_HOTBARS ? 0 : hotbarIndex; // Loop from last to first
-        InventoryHelperClient.swapHotbars(0, hotbarOrder[hotbarIndex]);
-        // save swapped position
-        int orderFirst = hotbarOrder[previousIndex];
-        hotbarOrder[previousIndex] = hotbarOrder[hotbarIndex];
-        hotbarOrder[hotbarIndex] = orderFirst;
+        }
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        int previousHotbarStartIndex = getPreviousHotbarWithCustomOrder() * VANILLA_HOTBAR_SIZE;
+        if (previousHotbarStartIndex - VANILLA_HOTBAR_SIZE < 0)
+            player.inventory.currentItem = Config.hotbarOrder[0] * VANILLA_HOTBAR_SIZE +
+                    player.inventory.currentItem % 9;
+        else
+            player.inventory.currentItem = previousHotbarStartIndex + player.inventory.currentItem % 9;
+    }
+
+    /**
+     * @see HotbarLogic#moveSelectionToPreviousHotbar(boolean)
+     */
+    private static void moveSelectionToPreviousHotbar() {
+        moveSelectionToPreviousHotbar(false);
     }
 
     /**
      * Go to next hotbar. Loops to first hotbar.
+     * @param force ignore the inverse config option
+     */
+    private static void moveSelectionToNextHotbar(boolean force) {
+        if (Config.inverseScrollDirection && !force) {
+            moveSelectionToPreviousHotbar(true);
+            return;
+        }
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        int nextHotbar = getNextHotbarWithCustomOrder();
+        int nextHotbarStartIndex = nextHotbar * VANILLA_HOTBAR_SIZE;
+        if (nextHotbarStartIndex + player.inventory.currentItem % 9 >= nextHotbarStartIndex + 9 ||
+                Arrays.asList(Config.hotbarOrder).indexOf(nextHotbar) >= Config.numberOfHotbars)
+            player.inventory.currentItem = Config.hotbarOrder[0] * VANILLA_HOTBAR_SIZE +
+                    player.inventory.currentItem % 9;
+        else
+            player.inventory.currentItem = nextHotbarStartIndex + player.inventory.currentItem % 9;
+    }
+
+    /**
+     * @see HotbarLogic#moveSelectionToNextHotbar(boolean)
      */
     private static void moveSelectionToNextHotbar() {
-        int currentIndex = 0;
-        for (int index : Config.hotbarOrder) {
-            if (index == hotbarIndex)
-                break;
-            currentIndex++;
-        }
-        int newIndex = currentIndex + 1;
-        if (currentIndex >= Config.numberOfHotbars - 1)
-            newIndex = 0;
-        moveSelectionToHotbar(Config.hotbarOrder[newIndex]);
+        moveSelectionToNextHotbar(false);
     }
 
     /**
@@ -178,35 +227,33 @@ public class HotbarLogic {
     public void keyPressed(InputEvent.KeyInputEvent event) {
         // Check toggle key
         if (KeyBindings.showDefaultHotbar.isPressed()) {
-            setShowDefault(!getShowDefault());
+            setShowDefaultToggle(!getShowDefaultToggle());
             Minecraft.getMinecraft().gameSettings.heldItemTooltips = shouldShowDefault();
         }
         // Update tool tip in case of modifier key
         updateTooltips();
         // Default render
-        if ((HotbarLogic.shouldShowDefault() && !Config.singleHotbarMode) || getShowDefault())
+        if ((HotbarLogic.shouldShowDefault() && !Config.singleHotbarMode) || getShowDefaultToggle() || !hasCoreMod)
             return;
         // Check hotbar keys
         int slot = KeyBindings.isHotbarKeyDown();
         int currentItem = Minecraft.getMinecraft().thePlayer.inventory.currentItem;
         // Change hotbar if modifier key is down and a number is pressed
         if (slot > -1 && KeyBindings.scrollModifier.isKeyDown() && slot < Config.numberOfHotbars)
-            moveSelectionToHotbar(slot);
+            moveSelectionToHotbar(Config.hotbarOrder[Config.inverseScrollDirection ? Config.numberOfHotbars - 1 - slot :
+                    slot]);
         // Change hotbars if pressed number matches currently selected slot
-        else if (slot > -1 && currentItem == slot && Config.numberOfHotbars > 1 && !shouldShowDefault())
+        else if (slot > -1 && currentItem % 9 == slot % 9 && Config.numberOfHotbars > 1 &&
+                slot < VANILLA_HOTBAR_SIZE && Config.doubleTapMovesToNextHotbar)
             moveSelectionToNextHotbar();
         // Select a slot
         else if (slot > - 1) {
-            int hotbar = Math.floorDiv(slot, InventoryPlayer.getHotbarSize());
-            if (hotbar < Config.numberOfHotbars) {
-                Minecraft.getMinecraft().thePlayer.inventory.currentItem = slot % InventoryPlayer.getHotbarSize();
-                // Custom slot key was pressed. Move to appropriate hotbar
-                if (slot >= InventoryPlayer.getHotbarSize())
-                    moveSelectionToHotbar(hotbar);
-                // Standard handling
-                else if (!Config.relativeHotbarKeys && !Config.singleHotbarMode)
-                    moveSelectionToHotbar(0);
-            }
+            int hotbar = (int) Math.floor(slot/ 9);
+            if (slot < VANILLA_HOTBAR_SIZE && Config.relativeHotbarKeys)
+                hotbar = getCurrentHotbarWithCustomOrder();
+            if (hotbar < Config.numberOfHotbars)
+                Minecraft.getMinecraft().thePlayer.inventory.currentItem = Config.hotbarOrder[hotbar] *
+                        VANILLA_HOTBAR_SIZE + slot % VANILLA_HOTBAR_SIZE;
         }
         if (slot > -1)
             resetTooltipTicks();
@@ -230,96 +277,19 @@ public class HotbarLogic {
      * @param index hotbar index
      */
     public static void moveSelectionToHotbar(int index) {
-        while (hotbarIndex != index)
-            moveSelection(true);
-    }
-
-    /**
-     * Reset hotbar.
-     * Updates index, order, current item, and toggle.
-     * @param resetCurrentItem should the current item be reset
-     */
-    public static void reset(boolean resetCurrentItem) {
-        updateTooltips();
-        hotbarIndex = 0;
-        for (int i = 0; i < Config.MAX_HOTBARS; i++)
-            hotbarOrder[i] = i;
-        try {
-            if (resetCurrentItem)
-                Minecraft.getMinecraft().thePlayer.inventory.currentItem = 0;
-        } catch (Exception ignore) {}
-        moveSelectionToHotbar(Config.hotbarOrder[0]);
-    }
-
-    /**
-     * @see HotbarLogic#reset(boolean)
-     */
-    private static void reset() {
-        reset(true);
-    }
-
-    /**
-     * Save the hotbar state for the current world to json.
-     */
-    private void save() {
-        InventoryHelperClient.reorderInventoryHotbar();
-        String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
-        try {
-            boolean found = false;
-            if (worldJsonArray != null) {
-                for (WorldJson worldJson : worldJsonArray) {
-                    if (worldJson.getId().equals(getWorldId())) {
-                        found = true;
-                        worldJson.setIndex(hotbarIndex);
-                        worldJson.setOrder(hotbarOrder);
-                        break;
-                    }
-                }
-            }
-            if ((!found) || worldJsonArray == null){
-                if (worldJsonArray == null)
-                    worldJsonArray = new WorldJson[1];
-                else
-                    worldJsonArray = Arrays.copyOf(worldJsonArray, worldJsonArray.length + 1);
-                int index = worldJsonArray.length - 1;
-                worldJsonArray[index] = new WorldJson();
-                worldJsonArray[index].setId(getWorldId());
-                worldJsonArray[index].setIndex(hotbarIndex);
-                worldJsonArray[index].setOrder(hotbarOrder);
-            }
-            Gson gson = new Gson();
-            FileWriter writer = new FileWriter(path);
-            String json = gson.toJson(worldJsonArray);
-            writer.write(json);
-            writer.close();
-        } catch (IOException ignore) {}
-    }
-
-    /**
-     * Load the hotbar state for current world from json. Defaults set if entry not found.
-     */
-    private void load() {
-        String path = Config.config.getConfigFile().getAbsolutePath().replace("cfg", "json");
-        try {
-            Gson gson = new Gson();
-            JsonReader reader = new JsonReader(new FileReader(path));
-            worldJsonArray = gson.fromJson(reader, WorldJson[].class);
-            if (worldJsonArray != null) {
-                for (WorldJson worldJson : worldJsonArray) {
-                    if (worldJson.getId().equals(getWorldId())) {
-                        reset(false);
-                        hotbarIndex = worldJson.getIndex();
-                        hotbarOrder = worldJson.getOrder();
-                        break;
-                    } else
-                        reset();
-                }
-            }
-            else
-                reset();
-        } catch (FileNotFoundException ignore) {
-            reset();
+        int tries = 0;
+        while (getCurrentHotbar() != index && tries < Config.numberOfHotbars) {
+            moveSelectionToNextHotbar();
+            tries++;
         }
+    }
+
+    /**
+     * Get the current hotbar index based on the current item.
+     * @return 0-Config$MAX_HOTBARS
+     */
+    static int getCurrentHotbar() {
+        return (int) Math.floor(Minecraft.getMinecraft().thePlayer.inventory.currentItem / 9);
     }
 
     /**
@@ -330,342 +300,14 @@ public class HotbarLogic {
     }
 
     /**
-     * Get the unique world ID.
-     * Local server uses seed, world name, and directory path.
-     * IP address if remote server.
-     * @return MD5 of world ID
+     * Send the player a message if the client is connected to a server without the core mod.
+     * @param event player tick
      */
-    private String getWorldId() {
-        // Construct unique id or use world address if remote
-        String id;
-        if (isWorldLocal) {
-            World world = Minecraft.getMinecraft().getIntegratedServer().getEntityWorld();
-            id = world.getWorldInfo().getSeed() + world.getWorldInfo().getWorldName() +
-                    world.getSaveHandler().getWorldDirectory().getAbsolutePath();
-        }
-        else {
-            id = worldAddress;
-        }
-        // MD5 because the raw id looks horrible with an escaped path and spaces in it
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] array = md.digest(id.getBytes());
-            StringBuilder sb = new StringBuilder();
-            for (byte anArray : array)
-                sb.append(Integer.toHexString((anArray & 0xFF) | 0x100).substring(1, 3));
-            id = sb.toString();
-        } catch (NoSuchAlgorithmException ignore) {}
-        return id;
-    }
-
-    /**
-     * Get the first empty stack following the long hotbar order.
-     * @return
-     */
-    private int getFirstEmptyStack() {
-        for (int i = 0; i < Config.numberOfHotbars; i++) {
-            for (int j = 0; j < 9; j++) {
-                int index = hotbarOrder[Config.hotbarOrder[i]] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
-                if (stack == null)
-                    return index;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Determines if the picked up item needs to be reordered. If it does, it is put into the reorder queue.
-     * @param event pickup event
-     */
-    public void pickupEvent(EntityItemPickupEvent event) {
-        if (shouldShowDefault() || Config.relativeHotbarPickups)
+    public static void sendPlayerMessage(TickEvent.PlayerTickEvent event) {
+        if (hasCoreMod || sentPlayerMessage || event.player != Minecraft.getMinecraft().thePlayer)
             return;
-        // Ignore events for other players
-        if (event.getEntityPlayer() != null && Minecraft.getMinecraft().thePlayer != null &&
-                event.getEntityPlayer().getUniqueID() != Minecraft.getMinecraft().thePlayer.getUniqueID())
-            return;
-        // Check if compatible stack is in inventory
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        if (player == null)
-            return;
-        int slot = getFirstCompatibleStack(event.getItem().getEntityItem());
-        if (slot >= 0) {
-            ItemStack stack = player.inventory.getStackInSlot(slot);
-            if (stack == null || stack.stackSize + event.getItem().getEntityItem().stackSize <= stack.getMaxStackSize())
-                return;
-        }
-        // Get the first empty stack
-        slot = getFirstEmptyStackVanilla(pickedUpAmountThisTick);
-        // No space in inventory
-        if (slot < 0)
-            return;
-        // Does not need a move
-        if (slot == getFirstEmptyStack())
-            return;
-        pickupMutex.lock();
-        this.pickupSlot.add(slot);
-        pickupMutex.unlock();
-        addInventoryReorderDelay(5);
-        pickedUpAmountThisTick++;
-    }
-
-    /**
-     * Get the first stack with vanilla ordering.
-     * @param skip Empty slots to skip
-     * @return slot index (0-35)
-     */
-    private int getFirstEmptyStackVanilla(int skip) {
-        ItemStack[] mainInventory = Minecraft.getMinecraft().thePlayer.inventory.mainInventory;
-        for (int i = 0; i < mainInventory.length; ++i)
-            if (mainInventory[i] == null)
-                if (skip-- == 0)
-                    return i;
-        return -1;
-    }
-
-    /**
-     * Finds first non full stack of the same item type
-     * @param itemStack item type to find
-     * @return slot index (0-35)
-     */
-    private int getFirstCompatibleStack(ItemStack itemStack) {
-        for (int i = 0; i < Config.numberOfHotbars; i++) {
-            for (int j = 0; j < 9; j++) {
-                int index = hotbarOrder[i] * 9 + j;
-                ItemStack stack = Minecraft.getMinecraft().thePlayer.inventory.getStackInSlot(index);
-                if (stack != null && stack.isStackable() && stack.isItemEqual(itemStack) &&
-                        ItemStack.areItemStackTagsEqual(stack, itemStack) &&
-                        stack.stackSize < stack.getMaxStackSize()) {
-                    return index;
-                }
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Try to reoder the slots in the queue.
-     * Will wait a few ticks for item to appear in inventory.
-     * After too many ticks top item in queue is removed.
-     */
-    private void reorderPickedupItem() {
-        pickupMutex.lock();
-        if (shouldShowDefault() || Config.relativeHotbarPickups) {
-            pickupMutex.unlock();
-            return;
-        }
-        // Update item tick counters
-        pickedUpAmountThisTick = 0;
-        if (inventoryReorderDelayTicks > 0) {
-            inventoryReorderDelayTicks--;
-            pickupMutex.unlock();
-            return;
-        }
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        // Nothing to move
-        if (this.pickupSlot.isEmpty()) {
-            pickupMutex.unlock();
-            return;
-        }
-        // Wait for item to appear after an uncertain number of ticks
-        if (waitForItemTicks >= 40) {
-            this.pickupSlot.remove(0);
-            waitForItemTicks = 0;
-            pickupMutex.unlock();
-            return;
-        }
-        else
-            waitForItemTicks++;
-        if (player.inventory.getStackInSlot(pickupSlot.get(0)) == null) {
-            pickupMutex.unlock();
-            return;
-        }
-        waitForItemTicks = 0;
-        // Move the picked up item to the correct slot
-        int clickSlotFirst = InventoryHelperClient.mainInventoryToFullInventory(this.pickupSlot.get(0));
-        int clickSlotSecond = InventoryHelperClient.mainInventoryToFullInventory(getFirstEmptyStack());
-        InventoryHelperClient.swapSlot(clickSlotFirst, clickSlotSecond);
-        if (this.pickupSlot.size() > 0)
-            this.pickupSlot.remove(0);
-        pickupMutex.unlock();
-    }
-
-    /**
-     * Sets world address and determines of world is local.
-     * Calls load()
-     * @param event client event
-     */
-	public void connectedToServer(FMLNetworkEvent.ClientConnectedToServerEvent event) {
-        worldAddress = event.getManager().getRemoteAddress().toString();
-        isWorldLocal = event.isLocal();
-        load();
-    }
-
-    /**
-     * Calls save()
-     * @param event client event
-     */
-    public void disconnectedFromServer(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
-        save();
-    }
-
-    /**
-     * Checks if the player has died and resets if keepinventory game rule is disabled.
-     * @param event death event
-     */
-    public void deathEvent(LivingDeathEvent event) {
-        if (event.getEntity() instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer) event.getEntity();
-            if (player == null || Minecraft.getMinecraft().thePlayer == null ||
-                    !player.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID()))
-                return;
-            if (!player.worldObj.getGameRules().getBoolean("keepInventory"))
-                HotbarLogic.reset();
-        }
-    }
-
-    /**
-     * Handles item reorder.
-     * Handles deadh and pickup event checks when connected to remote server.
-     * @param event
-     */
-    public void playerTick(TickEvent.PlayerTickEvent event) {
-        reorderPickedupItem();
-        updateIgnoredSlotTicks();
-        if (isWorldLocal)
-            return;
-        checkPlayerDeath();
-        checkItemPickedUp();
-    }
-
-    /**
-     * Decrements the ignored slots tick time every tick. Removes ignored slots when there time has expired.
-     */
-    private void updateIgnoredSlotTicks() {
-        for (Map.Entry<Integer, Integer> slot : ignoreSlots.entrySet()) {
-            if (slot.getValue() == 0)
-                ignoreSlots.remove(slot.getKey());
-            else
-                slot.setValue(slot.getValue() - 1);
-        }
-    }
-
-    /**
-     * Check if the player has picked uo an item.
-     * Item pickup event is not called when connected to remote servers.
-     * Let the pickup event handler handle this when it can.
-     */
-    private void checkItemPickedUp() {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        // Set the inventory
-        if (inventory == null ||
-                // Ignore if inventory is open TODO check inventory movement better
-                Minecraft.getMinecraft().currentScreen instanceof GuiInventory ||
-                Minecraft.getMinecraft().currentScreen instanceof GuiContainer ||
-                Minecraft.getMinecraft().currentScreen instanceof GuiContainerCreative) {
-            inventory = player.inventory.mainInventory.clone();
-        }
-        // Find the changed item
-        ArrayList<EntityItem> changed = new ArrayList<EntityItem>();
-        ArrayList<Integer> changedSlot = new ArrayList<Integer>();
-        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
-            if (
-                    // Check if slot should be ignored
-                    (!ignoreSlots.containsKey(i)) && (
-                    // Check if there is an item in a slot that was empty
-                    (player.inventory.mainInventory[i] != null && inventory[i] == null) ||
-                    // Make sure the slots are equal
-                    player.inventory.mainInventory[i] != null &&
-                    !(player.inventory.mainInventory[i].isItemEqual(inventory[i]) &&
-                    ItemStack.areItemStackTagsEqual(player.inventory.mainInventory[i], inventory[i])))) {
-                ItemStack changedStack = player.inventory.mainInventory[i].copy();
-                changed.add(new EntityItem(player.worldObj, player.posX, player.posY, player.posY, changedStack));
-                changedSlot.add(i);
-            }
-        }
-        // If no item changed it was probably just an item removal.
-        if (!changed.isEmpty()) {
-            int size = changed.size();
-            if (size > 1 && areInventoryItemsSame(player.inventory.mainInventory, inventory))
-                return;
-            // Save inventory copy
-            ItemStack[] inventoryUntouched = new ItemStack[player.inventory.mainInventory.length];
-            for (int slot = 0; slot < player.inventory.mainInventory.length; slot++)
-                inventoryUntouched[slot] = player.inventory.mainInventory[slot] == null ? null :
-                        player.inventory.mainInventory[slot].copy();
-            // Call the event handler
-            for (int i = 0; i < size; i++) {
-                int slot = changedSlot.get(0);
-                // Remove item from inventory to emulate the inventory state that the event handler expects
-                if (inventory[slot] == null)
-                    player.inventory.mainInventory[slot].stackSize = 0;
-                else
-                    player.inventory.mainInventory[slot].stackSize -= inventory[slot].stackSize;
-                if (player.inventory.mainInventory[slot].stackSize == 0)
-                    player.inventory.removeStackFromSlot(slot);
-                // Create the pickup event
-                pickupEvent(new EntityItemPickupEvent(player, changed.get(0)));
-                // Remove from array lists
-                changed.remove(0);
-                changedSlot.remove(0);
-            }
-            // Add item back to inventory to emulate the event having already taking place and the tick handler will
-            // move it
-            for (int slot = 0; slot < inventoryUntouched.length; slot++)
-                player.inventory.mainInventory[slot] = inventoryUntouched[slot];
-        }
-        // Update cached inventory
-        inventory = player.inventory.mainInventory.clone();
-    }
-
-    /**
-     * Compares two inventories, ignoring order, to see if the items are the same.
-     * @param inventory first inventory
-     * @param inventory2 second inventory
-     * @return do the have the same items
-     */
-    private boolean areInventoryItemsSame(ItemStack[] inventory, ItemStack[] inventory2) {
-        for (ItemStack item : inventory) {
-            boolean found = false;
-            for (ItemStack item2 : inventory2)
-                if ((item == null && item2 == null) || (item != null && item2 != null && item.isItemEqual(item2) &&
-                        ItemStack.areItemStackTagsEqual(item, item2)))
-                    found = true;
-            if (!found)
-                return false;
-        }
-        return true;
-    }
-
-    /***
-     * Check for a player death on remote servers.
-     * The player death event is not called.
-     * Let the death event handler evoke the reset if possible.
-     */
-    private void checkPlayerDeath() {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        if (!player.isEntityAlive()) {
-            for (ItemStack slot : player.inventoryContainer.getInventory())
-                if (slot != null)
-                    return;
-            reset();
-        }
-    }
-
-    /**
-     * Add a tick delay to the item reordered.
-     * @param delay ticks
-     */
-    private static void addInventoryReorderDelay(int delay) {
-        inventoryReorderDelayTicks += delay;
-    }
-
-    /**
-     * Ignore a slot for a few ticks
-     * @param slot slot index (0-35)
-     */
-    public static void ignoreSlot(int slot) {
-        ignoreSlots.put(slot, 5);
+        event.player.addChatMessage(new TextComponentTranslation(
+                String.format("%s.message.core_mod_missing", Constants.MODID)));
+        setSentPlayerMessage(true);
     }
 }
