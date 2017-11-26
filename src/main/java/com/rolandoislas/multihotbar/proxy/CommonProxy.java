@@ -1,13 +1,11 @@
 package com.rolandoislas.multihotbar.proxy;
 
-import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.data.Config;
 import com.rolandoislas.multihotbar.event.EventHandlerCommon;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 /**
  * Created by Rolando on 6/6/2016.
@@ -22,8 +20,7 @@ public class CommonProxy {
     }
 
     public void init(FMLInitializationEvent event) {
-        // Reorder packet
-        MultiHotbar.networkChannel = NetworkRegistry.INSTANCE.newSimpleChannel(MultiHotbar.MODID + ".channel");
+
     }
 
     public void postInit(FMLPostInitializationEvent event) {}
