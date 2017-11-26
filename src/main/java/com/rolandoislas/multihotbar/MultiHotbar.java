@@ -26,7 +26,6 @@ public class MultiHotbar
             serverSide = "com.rolandoislas.multihotbar.proxy.CommonProxy")
     public static CommonProxy proxy;
     public static Logger logger;
-    public static SimpleNetworkWrapper networkChannel;
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
