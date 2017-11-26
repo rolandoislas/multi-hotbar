@@ -26,13 +26,6 @@ minecraft {
     //mappings = "stable_12"
 }
 
-jar {
-    manifest {
-        attributes 'FMLCorePlugin': 'com.rolandoislas.multihotbar.asm.FmlLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
-    }
-}
-
 if (ext.tag) {
     curseforge {
         apiKey = System.getenv("CURSE_API_KEY") ?: ""

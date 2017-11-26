@@ -5,6 +5,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import com.rolandoislas.multihotbar.HotbarLogic;
 import net.minecraft.util.EnumChatFormatting;
+import com.rolandoislas.multihotbar.MultiHotbar;
 import net.minecraftforge.common.config.Configuration;
 
 import java.io.File;
@@ -22,7 +23,7 @@ public class Config {
     public static int[] hotbarOrder;
     public static boolean stackedHotbars;
     public static boolean shiftChat;
-    private static final String BASE_LANG = Constants.MODID + ".config.";
+    private static final String BASE_LANG = MultiHotbar.MODID + ".config.";
     public static boolean singleHotbarMode;
     public static boolean singleHotbarModeShowOnModiferKey;
 

@@ -1,6 +1,7 @@
 package com.rolandoislas.multihotbar.data;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
+import com.rolandoislas.multihotbar.MultiHotbar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -10,9 +11,9 @@ import org.lwjgl.input.Keyboard;
  * Created by Rolando on 6/10/2016.
  */
 public class KeyBindings {
-    private static final String CATEGORY_GENERAL = String.format("key.%s.category.main", Constants.MODID);
+    private static final String CATEGORY_GENERAL = String.format("key.%s.category.main", MultiHotbar.MODID);
     private static final String CATEGORY_HOTBAR_KEYS = String.format("key.%s.category.hotbarkeys",
-            Constants.MODID);
+            MultiHotbar.MODID);
     public static KeyBinding scrollModifier;
     public static KeyBinding showDefaultHotbar;
     public static KeyBinding nextHotbar;
@@ -42,7 +43,7 @@ public class KeyBindings {
     }
 
     private static String getDescription(String description) {
-        return String.format("key.%s.%s", Constants.MODID, description);
+        return String.format("key.%s.%s", MultiHotbar.MODID, description);
     }
 
     public static int isHotbarKeyDown() {
