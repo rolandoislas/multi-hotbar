@@ -14,6 +14,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class InventoryHelperCommon {
+    public static int hotbarIndex = 0;
+    public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
     /**
      * Swap hotbar items
      * @param firstIndex index of first hotbar
