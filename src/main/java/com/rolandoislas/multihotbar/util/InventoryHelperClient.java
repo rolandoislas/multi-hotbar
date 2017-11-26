@@ -2,7 +2,6 @@ package com.rolandoislas.multihotbar.util;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
-import com.rolandoislas.multihotbar.net.ReorderPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -122,14 +121,6 @@ public class InventoryHelperClient {
      */
     private static void reorderInventory(int[] hotbarOrder, int[] order, EntityPlayer player) {
         InventoryHelperCommon.reorderInventory(hotbarOrder, order, player, InventoryHelperClient.class);
-    }
-
-    /**
-     * Send a reorder request to the server.
-     */
-    static void reorderInventoryVanillaContainer() {
-        MultiHotbar.networkChannel.sendToServer(new ReorderPacket(HotbarLogic.hotbarOrder, new int[] {0, 1, 2, 3},
-                HotbarLogic.hotbarIndex));
     }
 
     /**
