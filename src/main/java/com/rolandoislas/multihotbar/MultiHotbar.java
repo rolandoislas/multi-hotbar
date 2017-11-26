@@ -18,7 +18,7 @@ public class MultiHotbar
     public static final String VERSION = "3.2";
     public static final String NAME = "Multi-Hotbar";
     // https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
-    public static final String MC_VERSION = "[1.12,1.13]";
+    public static final String MC_VERSION = "[1.10,1.11]";
     @Mod.Instance(MODID)
     @SuppressWarnings("unused")
     public static MultiHotbar instance;
@@ -26,7 +26,6 @@ public class MultiHotbar
             serverSide = "com.rolandoislas.multihotbar.proxy.CommonProxy")
     public static CommonProxy proxy;
     public static Logger logger;
-    public static SimpleNetworkWrapper networkChannel;
 
     @Mod.EventHandler
     @SuppressWarnings("unused")
