@@ -13,9 +13,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class InventoryHelperCommon {
-    public static int hotbarIndex = 0;
-    public static int[] hotbarOrder = new int[Config.MAX_HOTBARS];
-
     /**
      * Swap hotbar items
      * @param firstIndex index of first hotbar
@@ -118,14 +115,5 @@ public class InventoryHelperCommon {
                 out.append("\n");
         }
         MultiHotbar.logger.debug(out.toString());
-    }
-
-    /**
-     * Gets the current item that the player is holding, taking into account the swapped hotbar order
-     */
-    @SuppressWarnings("unused")
-    public static ItemStack getCurrentItem(InventoryPlayer inventory) {
-        int hotbar = hotbarOrder[hotbarIndex];
-        return inventory.getStackInSlot(hotbar * InventoryPlayer.getHotbarSize() + inventory.currentItem);
     }
 }

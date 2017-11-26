@@ -1,6 +1,5 @@
 package com.rolandoislas.multihotbar;
 
-import com.rolandoislas.multihotbar.data.Constants;
 import com.rolandoislas.multihotbar.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -10,12 +9,17 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Constants.MODID, version = Constants.VERSION, name = Constants.NAME, acceptableRemoteVersions = "*",
+@Mod(modid = MultiHotbar.MODID, version = MultiHotbar.VERSION, name = MultiHotbar.NAME, acceptableRemoteVersions = "*",
     guiFactory = "com.rolandoislas.multihotbar.gui.GuiFactory", canBeDeactivated = true,
-    acceptedMinecraftVersions = Constants.MC_VERSION)
+    acceptedMinecraftVersions = MultiHotbar.MC_VERSION)
 public class MultiHotbar
 {
-    @Mod.Instance(Constants.MODID)
+    public static final String MODID = "multihotbar";
+    public static final String VERSION = "3.2";
+    public static final String NAME = "Multi-Hotbar";
+    // https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
+    public static final String MC_VERSION = "[1.12,1.13]";
+    @Mod.Instance(MODID)
     @SuppressWarnings("unused")
     public static MultiHotbar instance;
     @SidedProxy(clientSide = "com.rolandoislas.multihotbar.proxy.ClientProxy",
