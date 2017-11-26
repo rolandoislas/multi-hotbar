@@ -9,10 +9,8 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 import com.rolandoislas.multihotbar.HotBarRenderer;
 import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.data.Config;
-import com.rolandoislas.multihotbar.util.GuiUtil;
 import com.rolandoislas.multihotbar.util.InvTweaksHelper;
 import com.rolandoislas.multihotbar.util.InventoryHelperClient;
-import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -85,10 +83,5 @@ public class EventHandlerClient {
     public void playerTick(TickEvent.PlayerTickEvent event) {
         InventoryHelperClient.tick();
         hotbarLogic.playerTick(event);
-    }
-
-    @SubscribeEvent(priority = EventPriority.NORMAL)
-    public void guiEvent(GuiOpenEvent event) {
-        GuiUtil.guiOpenEvent(event);
     }
 }

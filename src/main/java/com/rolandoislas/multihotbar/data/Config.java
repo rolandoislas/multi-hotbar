@@ -112,7 +112,7 @@ public class Config {
     }
 
     public static void configChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.modID.equals(Constants.MODID)) {
+        if (event.modID.equals(MultiHotbar.MODID)) {
             Config.config.save();
             Config.reload();
         }

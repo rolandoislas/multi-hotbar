@@ -1,6 +1,5 @@
 package com.rolandoislas.multihotbar.util;
 
-import com.rolandoislas.multihotbar.HotbarLogic;
 import com.rolandoislas.multihotbar.MultiHotbar;
 import com.rolandoislas.multihotbar.data.Config;
 import net.minecraft.entity.player.EntityPlayer;
