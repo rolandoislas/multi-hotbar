@@ -85,8 +85,6 @@ public class InventoryHelperClient {
      * Orders the inventory to the saved row order
      */
     public static void reorderInventoryHotbar() {
-        MultiHotbar.networkChannel.sendToServer(new ReorderPacket(InventoryHelperCommon.hotbarOrder,
-                InventoryHelperCommon.hotbarOrder, InventoryHelperCommon.hotbarIndex));
         synchronized (InventoryHelperClient.class) {
             if (savedIndex < 0)
                 return;
