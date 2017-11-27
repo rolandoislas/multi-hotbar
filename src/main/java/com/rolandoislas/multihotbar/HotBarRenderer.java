@@ -241,8 +241,7 @@ public class HotBarRenderer extends Gui {
             renderPosted = true;
         }
         // Apply the translation
-        if ((Config.numberOfHotbars > 2 || Config.stackedHotbars)
-                && isElementToShift(event.getType()) && !HotbarLogic.shouldShowDefault()) {
+        if (shouldShift(event.getType())) {
             if (!renderPosted)
                 GL11.glPopMatrix();
             renderPosted = false;
@@ -252,13 +251,23 @@ public class HotBarRenderer extends Gui {
         }
     }
 
+    /**
+     * Determines if the element should be shifted
+     * @param type element to check
+     * @return should a shift occur
+     */
+    private boolean shouldShift(RenderGameOverlayEvent.ElementType type) {
+        return (Config.numberOfHotbars > 2 || Config.stackedHotbars) &&
+                isElementToShift(type) &&
+                !HotbarLogic.shouldShowDefault();
+    }
+
     public void renderOverlayEventPost(RenderGameOverlayEvent.Post event) {
         shiftOverlayDown(event);
     }
 
     private void shiftOverlayDown(RenderGameOverlayEvent.Post event) {
-        if ((Config.numberOfHotbars > 2 || Config.stackedHotbars)
-                && isElementToShift(event.getType()) && !HotbarLogic.shouldShowDefault()) {
+        if (shouldShift(event.getType())) {
             renderPosted = true;
             GL11.glPopMatrix();
         }

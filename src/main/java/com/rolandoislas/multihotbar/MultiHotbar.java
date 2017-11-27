@@ -50,6 +50,9 @@ public class MultiHotbar
     @SuppressWarnings("unused")
     @NetworkCheckHandler
     public boolean networkCheck(Map<String, String> mods, Side side) {
+        // Ignore if the request is on the server
+        if (side.isClient())
+            return true;
         boolean hasCore = false;
         for (String mod : mods.keySet())
             if (mod.equals("multihotbarcore"))
