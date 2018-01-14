@@ -2,12 +2,16 @@ package com.rolandoislas.multihotbar.data;
 
 import com.rolandoislas.multihotbar.HotbarLogic;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -16,6 +20,7 @@ import java.util.ArrayList;
 public class Config {
     public static final int MAX_HOTBARS = 4;
     private static final String BASE_LANG = Constants.MODID + ".config.";
+    private static final String HOTBAR_SIZE_FILE_LOCATION = "./config/multihotbar_size.txt";
     public static Configuration config;
     public static int numberOfHotbars;
     public static boolean relativeHotbarKeys;
@@ -49,6 +54,25 @@ public class Config {
         // Load again with defaults. This makes sure the GuiConfig has the correct defaults.
         config.load();
         populateConfig(true);
+        // Save hotbar size for multihotbar-core
+        saveHotbarSizeConfig();
+        // Check if size is to big and a restart is required
+        if (InventoryPlayer.getHotbarSize() < numberOfHotbars * HotbarLogic.VANILLA_HOTBAR_SIZE)
+            numberOfHotbars = InventoryPlayer.getHotbarSize() / HotbarLogic.VANILLA_HOTBAR_SIZE;
+    }
+
+    /**
+     * Saves hotbar size to a file for the core mod to load the correct value
+     */
+    private static void saveHotbarSizeConfig() {
+        try {
+            FileOutputStream sizeOutputFile = new FileOutputStream(HOTBAR_SIZE_FILE_LOCATION);
+            sizeOutputFile.write(String.valueOf(numberOfHotbars).getBytes());
+            sizeOutputFile.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void populateConfig(boolean defaults) {

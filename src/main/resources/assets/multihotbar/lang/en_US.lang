@@ -37,7 +37,7 @@ key.multihotbar.hotbarkey.36=Hotbar Slot 36
 # Config
 
 multihotbar.config.general.numberofhotbars=Number of Hotbars
-multihotbar.config.general.numberofhotbars.tooltip=Defines the amount of hotbars that should be displayed
+multihotbar.config.general.numberofhotbars.tooltip=Defines the amount of hotbars that should be displayed\n§cRequires a restart
 multihotbar.config.general.relativehotbarkeys=Relative Hotbar Keys
 multihotbar.config.general.relativehotbarkeys.tooltip=If set to true, pressing the hotbar keys (e.g. 1-9) will move to the slot on the currently selected hotbar instead of the first.
 multihotbar.config.general.inventoryorder=Hotbar Order
