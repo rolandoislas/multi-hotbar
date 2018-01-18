@@ -7,8 +7,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.client.event.MouseEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.util.Arrays;
 
@@ -120,6 +121,10 @@ public class HotbarLogic {
             event.setCanceled(true);
             resetTooltipTicks();
         }
+        else if (event.isButtonstate()) {
+            // FIXME the event registers as a button event on button down, not up
+            //keyPressed();
+        }
     }
 
     /**
@@ -222,9 +227,8 @@ public class HotbarLogic {
 
     /**
      * Handles button events
-     * @param event Key input
      */
-    public void keyPressed(InputEvent.KeyInputEvent event) {
+    public void keyPressed() {
         // Check toggle key
         if (KeyBindings.showDefaultHotbar.isPressed()) {
             setShowDefaultToggle(!getShowDefaultToggle());
@@ -232,6 +236,19 @@ public class HotbarLogic {
         }
         // Update tool tip in case of modifier key
         updateTooltips();
+        // Check for vanilla's save and restore hotbar feature
+        if (Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindLoadToolbar.getKeyCode()) ||
+                Mouse.isButtonDown(Minecraft.getMinecraft().gameSettings.keyBindLoadToolbar.getKeyCode()) ||
+                Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSaveToolbar.getKeyCode()) ||
+                Mouse.isButtonDown(Minecraft.getMinecraft().gameSettings.keyBindSaveToolbar.getKeyCode())) {
+            int savedHotbar = KeyBindings.isHotbarKeyDown(true, true);
+            if (savedHotbar > -1) {
+                resetTooltipTicks();
+                KeyBindings.nextHotbarWasPressed = false;
+                KeyBindings.previousHotbarWasPressed = false;
+                return;
+            }
+        }
         // Default render
         if ((HotbarLogic.shouldShowDefault() && !Config.singleHotbarMode) || getShowDefaultToggle() || !hasCoreMod)
             return;
@@ -258,11 +275,21 @@ public class HotbarLogic {
         if (slot > -1)
             resetTooltipTicks();
         // Next hotbar key
-        if (KeyBindings.nextHotbar.isPressed())
+        if (KeyBindings.nextHotbar.isPressed()) {
+            KeyBindings.nextHotbarWasPressed = true;
+        }
+        else if (KeyBindings.nextHotbarWasPressed) {
             moveSelectionToNextHotbar();
+            KeyBindings.nextHotbarWasPressed = false;
+        }
         // Previous hotbar key
-        if (KeyBindings.previousHotbar.isPressed())
+        if (KeyBindings.previousHotbar.isPressed()) {
+            KeyBindings.previousHotbarWasPressed = true;
+        }
+        else if (KeyBindings.previousHotbarWasPressed) {
             moveSelectionToPreviousHotbar();
+            KeyBindings.previousHotbarWasPressed = false;
+        }
     }
 
     /**

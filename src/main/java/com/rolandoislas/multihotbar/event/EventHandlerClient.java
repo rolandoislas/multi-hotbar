@@ -51,7 +51,7 @@ public class EventHandlerClient {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void keyPressed(InputEvent.KeyInputEvent event) {
-        hotbarLogic.keyPressed(event);
+        hotbarLogic.keyPressed();
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)

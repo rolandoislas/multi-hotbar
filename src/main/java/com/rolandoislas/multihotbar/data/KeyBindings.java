@@ -6,6 +6,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +24,8 @@ public class KeyBindings {
     public static KeyBinding nextHotbar;
     private static List<KeyBinding> hotbarKeys;
     public static KeyBinding previousHotbar;
+    public static boolean nextHotbarWasPressed;
+    public static boolean previousHotbarWasPressed;
 
     public static void load() {
         scrollModifier = new KeyBinding(getDescription("scrollModifier"), Keyboard.KEY_LMENU, CATEGORY_GENERAL);
@@ -47,13 +50,25 @@ public class KeyBindings {
         return String.format("key.%s.%s", Constants.MODID, description);
     }
 
-    public static int isHotbarKeyDown() {
+    public static int isHotbarKeyDown(boolean defaultOnly, boolean overrideSafe) {
         List<KeyBinding> bindings = new ArrayList<>();
         Collections.addAll(bindings, Minecraft.getMinecraft().gameSettings.keyBindsHotbar);
-        bindings.addAll(hotbarKeys);
-        for (KeyBinding keyBinding : bindings)
-            if (keyBinding.isPressed())
-                return bindings.indexOf(keyBinding);
+        if (!defaultOnly)
+            bindings.addAll(hotbarKeys);
+        for (KeyBinding keyBinding : bindings) {
+            if (overrideSafe) {
+                if ((Keyboard.isKeyDown(keyBinding.getKeyCode()) || Mouse.isButtonDown(keyBinding.getKeyCode())))
+                    return bindings.indexOf(keyBinding);
+            }
+            else {
+                if (keyBinding.isPressed())
+                    return bindings.indexOf(keyBinding);
+            }
+        }
         return -1;
+    }
+
+    public static int isHotbarKeyDown() {
+        return isHotbarKeyDown(false, false);
     }
 }
