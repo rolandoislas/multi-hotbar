@@ -29,7 +29,7 @@ public class EventHandlerClient {
         hotbarRender.renderOverlayEvent(event);
     }
 
-    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void mouseEvent(MouseEvent event) {
         hotbarLogic.mouseEvent(event);
     }
