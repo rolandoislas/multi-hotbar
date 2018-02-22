@@ -26,16 +26,19 @@ public class KeyBindings {
     public static KeyBinding previousHotbar;
     public static boolean nextHotbarWasPressed;
     public static boolean previousHotbarWasPressed;
+    public static KeyBinding scrollIgnore;
 
     public static void load() {
         scrollModifier = new KeyBinding(getDescription("scrollModifier"), Keyboard.KEY_LMENU, CATEGORY_GENERAL);
         showDefaultHotbar = new KeyBinding(getDescription("showDefaultHotbar"), Keyboard.KEY_GRAVE, CATEGORY_GENERAL);
         nextHotbar = new KeyBinding(getDescription("nextHotbar"), Keyboard.KEY_X, CATEGORY_GENERAL);
         previousHotbar = new KeyBinding(getDescription("previousHotbar"), Keyboard.KEY_C, CATEGORY_GENERAL);
+        scrollIgnore = new KeyBinding(getDescription("scrollIgnore"), Keyboard.KEY_NONE, CATEGORY_GENERAL);
         ClientRegistry.registerKeyBinding(scrollModifier);
         ClientRegistry.registerKeyBinding(showDefaultHotbar);
         ClientRegistry.registerKeyBinding(nextHotbar);
         ClientRegistry.registerKeyBinding(previousHotbar);
+        ClientRegistry.registerKeyBinding(scrollIgnore);
 
         hotbarKeys = new ArrayList<>();
         for (int slot = HotbarLogic.VANILLA_HOTBAR_SIZE + 1; slot <= InventoryPlayer.getHotbarSize(); slot++) {

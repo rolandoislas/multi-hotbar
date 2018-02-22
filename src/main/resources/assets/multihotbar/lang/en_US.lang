@@ -6,6 +6,7 @@ key.multihotbar.scrollModifier=Scroll Modifier
 key.multihotbar.showDefaultHotbar=Show Default Hotbar
 key.multihotbar.nextHotbar=Next Hotbar
 key.multihotbar.previousHotbar=Previous Hotbar
+key.multihotbar.scrollIgnore=Ignore Scroll
 key.multihotbar.hotbarkey.10=Hotbar Slot 10
 key.multihotbar.hotbarkey.11=Hotbar Slot 11
 key.multihotbar.hotbarkey.12=Hotbar Slot 12

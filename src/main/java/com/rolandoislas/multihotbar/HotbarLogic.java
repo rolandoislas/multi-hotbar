@@ -73,7 +73,7 @@ public class HotbarLogic {
      * @param event mouse event
      */
     public void mouseEvent(MouseEvent event) {
-        if (!hasCoreMod || getShowDefaultToggle() || event.isCanceled())
+        if (!hasCoreMod || getShowDefaultToggle() || event.isCanceled() || KeyBindings.scrollIgnore.isKeyDown())
             return;
         // Scrolled
         if (event.getDwheel() != 0) {
