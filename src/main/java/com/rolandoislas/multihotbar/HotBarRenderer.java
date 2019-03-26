@@ -34,6 +34,9 @@ public class HotBarRenderer extends Gui {
         // Check if hotbar should render
         if (!(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && event.isCancelable()))
             return;
+	if (HotbarLogic.shouldShowDefault()) {
+	    return;
+	}
         event.setCanceled(true);
         // Render
         GlStateManager.color(1, 1, 1, 1);
